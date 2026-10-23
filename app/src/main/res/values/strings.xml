@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Robot Vacuum App</string>
+    <string name="title_create_account">Tạo tài khoản</string>
+    <string name="hint_full_name">Họ và tên</string>
+    <string name="hint_username">Tên đăng nhập</string>
+    <string name="hint_password">Mật khẩu (Tối thiểu 8 ký tự)</string>
+    <string name="password_strength">Độ mạnh mật khẩu</string>
+    <string name="hint_confirm_password">Xác nhận mật khẩu</string>
+    <string name="btn_register">Đăng ký tài khoản</string>
+    <string name="prompt_have_account">Đã có tài khoản? </string>
+    <string name="action_login_now">Đăng nhập ngay</string>
+
+    <!-- Login Screen Strings -->
+    <string name="title_login">Đăng nhập</string>
+    <string name="hint_login_password">Mật khẩu</string>
+    <string name="remember_me">Ghi nhớ đăng nhập</string>
+    <string name="forgot_password">Quên mật khẩu?</string>
+    <string name="btn_login">Đăng nhập</string>
+    <string name="prompt_no_account">Chưa có tài khoản? </string>
+    <string name="action_register_now">Đăng ký ngay</string>
+</resources>
