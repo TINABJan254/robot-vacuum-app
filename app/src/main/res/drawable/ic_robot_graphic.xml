@@ -1,0 +1,75 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+    <!-- Outer dashed circular track ring -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#D8E2DC"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M100,10 A90,90 0 1,1 99.9,10" />
+
+    <!-- Inner subtle dashed ring -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#E8ECEF"
+        android:strokeWidth="1.2"
+        android:pathData="M100,20 A80,80 0 1,1 99.9,20" />
+
+    <!-- Robot Main Body Circle -->
+    <path
+        android:fillColor="#FAFCFA"
+        android:strokeColor="#CBD7D0"
+        android:strokeWidth="2.5"
+        android:pathData="M100,28 A72,72 0 1,1 99.9,28 Z" />
+
+    <!-- Top Front Bumper Arch -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#CBD7D0"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M56,48 C70,36 130,36 144,48" />
+
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#CBD7D0"
+        android:strokeWidth="2"
+        android:pathData="M84,33 C94,28 106,28 116,33" />
+
+    <!-- Center Lidar Sensor Turret -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#CBD7D0"
+        android:strokeWidth="2"
+        android:pathData="M100,75 A25,25 0 1,1 99.9,75 Z" />
+
+    <!-- Dark Green Lidar Core -->
+    <path
+        android:fillColor="#165030"
+        android:pathData="M100,83 A17,17 0 1,1 99.9,83 Z" />
+
+    <!-- Lidar lens / reflection dot -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M98,95 A3.5,3.5 0 1,1 98,102 A3.5,3.5 0 1,1 98,95 Z" />
+
+    <!-- Lower Control / Status Dots -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#94A3B8"
+        android:strokeWidth="2"
+        android:pathData="M100,138 A7,7 0 1,1 99.9,138 Z" />
+
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M78,142 A3,3 0 1,1 78,148 A3,3 0 1,1 78,142 Z" />
+
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M122,142 A3,3 0 1,1 122,148 A3,3 0 1,1 122,142 Z" />
+
+</vector>

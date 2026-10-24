@@ -18,4 +18,18 @@
     <string name="btn_login">Đăng nhập</string>
     <string name="prompt_no_account">Chưa có tài khoản? </string>
     <string name="action_register_now">Đăng ký ngay</string>
+
+    <!-- Home Screen Strings -->
+    <string name="title_vacuum_robot">Vacuum Robot</string>
+    <string name="empty_robot_title">Bạn chưa có robot</string>
+    <string name="empty_robot_subtitle">không tìm thấy thiết bị kết nối trong\nphạm vi</string>
+    <string name="btn_add_robot">Thêm Robot</string>
+    <string name="header_online_devices">THIẾT BỊ TRỰC TUYẾN (%1$d)</string>
+    <string name="action_sort">Sắp xếp</string>
+    <string name="tab_robot">Robot</string>
+    <string name="tab_space">Không gian</string>
+    <string name="tab_mine">Mine</string>
+    <string name="status_ready">Sẵn sàng</string>
+    <string name="status_charging">Đang sạc</string>
+    <string name="status_waiting">Chờ</string>
 </resources>

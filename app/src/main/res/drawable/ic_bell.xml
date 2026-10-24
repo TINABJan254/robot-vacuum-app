@@ -1,0 +1,26 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Bell outline -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#2B3445"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M18,8 A6,6 0 0,0 6,8 C6,15 3,17 3,17 L21,17 C21,17 18,15 18,8 Z" />
+    <!-- Clapper -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#2B3445"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M10.3,20 C10.6,20.6 11.2,21 12,21 C12.8,21 13.4,20.6 13.7,20" />
+    <!-- Notification dot (filled green or dark) -->
+    <path
+        android:fillColor="#165030"
+        android:pathData="M18.5,4 A2.5,2.5 0 1,1 18.5,9 A2.5,2.5 0 1,1 18.5,4 Z" />
+</vector>

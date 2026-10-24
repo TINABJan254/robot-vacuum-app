@@ -1,0 +1,24 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="80dp"
+    android:height="80dp"
+    android:viewportWidth="80"
+    android:viewportHeight="80">
+
+    <!-- Robot Body Rounded Square -->
+    <path
+        android:fillColor="#F8FAFC"
+        android:strokeColor="#CBD5E1"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M24,14 L56,14 C62,14 66,18 66,24 L66,56 C66,62 62,66 56,66 L24,66 C18,66 14,62 14,56 L14,24 C14,18 18,14 24,14 Z" />
+
+    <!-- Center Sensor -->
+    <path
+        android:fillColor="#94A3B8"
+        android:pathData="M40,34 A6,6 0 1,1 39.9,34 Z" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,38 A1.8,1.8 0 1,1 39.9,38 Z" />
+</vector>

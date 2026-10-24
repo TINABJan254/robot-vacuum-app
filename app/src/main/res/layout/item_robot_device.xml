@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card_container"
+    android:layout_width="match_parent"
+    android:layout_height="186dp"
+    android:layout_margin="6dp"
+    android:background="@drawable/bg_card_robot_normal"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    android:padding="12dp">
+
+    <!-- Status Badge (Top-Left) -->
+    <TextView
+        android:id="@+id/tv_status_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_badge_status_ready"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="3dp"
+        android:textColor="@color/primary_green"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="● Sẵn sàng" />
+
+    <!-- Battery Level (Top-Right) -->
+    <TextView
+        android:id="@+id/tv_battery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_secondary"
+        android:textSize="11sp"
+        app:layout_constraintBaseline_toBaselineOf="@id/tv_status_badge"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="83%" />
+
+    <!-- Robot Illustration Image -->
+    <ImageView
+        android:id="@+id/img_robot"
+        android:layout_width="68dp"
+        android:layout_height="68dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_robot_card_circle_green"
+        app:layout_constraintBottom_toTopOf="@id/tv_robot_name"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_status_badge" />
+
+    <!-- Robot Name -->
+    <TextView
+        android:id="@+id/tv_robot_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_title"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@id/tv_robot_room"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="Robot_01" />
+
+    <!-- Robot Room / Location -->
+    <TextView
+        android:id="@+id/tv_robot_room"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="2dp"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="Phòng khách" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

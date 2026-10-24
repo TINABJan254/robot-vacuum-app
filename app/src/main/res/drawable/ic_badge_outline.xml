@@ -1,0 +1,42 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Card outer box -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#5A687D"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M5,7 C5,5.895 5.895,5 7,5 L17,5 C18.105,5 19,5.895 19,7 L19,19 C19,20.105 18.105,21 17,21 L7,21 C5.895,21 5,20.105 5,19 Z" />
+    <!-- Top hanger clip -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#5A687D"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M10,5 L10,3 C10,2.448 10.448,2 11,2 L13,2 C13.552,2 14,2.448 14,3 L14,5" />
+    <!-- Portrait photo inside card -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#5A687D"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M8,13 C8,11.5 9,10 10.5,10 C12,10 13,11.5 13,13" />
+    <!-- Head dot -->
+    <path
+        android:fillColor="#5A687D"
+        android:pathData="M10.5,9 C11.052,9 11.5,8.552 11.5,8 C11.5,7.448 11.052,7 10.5,7 C9.948,7 9.5,7.448 9.5,8 C9.5,8.552 9.948,9 10.5,9 Z" />
+    <!-- Text lines inside card -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#5A687D"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M8,16 L16,16 M8,18.5 L13,18.5" />
+</vector>
