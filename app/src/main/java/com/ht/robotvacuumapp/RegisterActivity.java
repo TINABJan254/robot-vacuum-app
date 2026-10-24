@@ -1,5 +1,6 @@
 package com.ht.robotvacuumapp;
 
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -25,6 +26,9 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.ht.robotvacuumapp.auth.AuthRepository;
+import com.ht.robotvacuumapp.network.model.RegisterResponse;
+
 public class RegisterActivity extends AppCompatActivity {
 
     private EditText edtFullName;
@@ -41,6 +45,8 @@ public class RegisterActivity extends AppCompatActivity {
     private boolean isPasswordVisible = false;
     private boolean isConfirmPasswordVisible = false;
 
+    private AuthRepository authRepository;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,6 +58,8 @@ public class RegisterActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        authRepository = new AuthRepository(this);
 
         initViews();
         setupPasswordToggles();
@@ -243,8 +251,30 @@ public class RegisterActivity extends AppCompatActivity {
                 return;
             }
 
-            // Valid registration form
-            Toast.makeText(this, "Đăng ký tài khoản thành công!", Toast.LENGTH_LONG).show();
+            // Call API
+            btnRegister.setEnabled(false);
+            btnRegister.setText("Đang đăng ký...");
+
+            authRepository.register(fullName, username, password, new AuthRepository.AuthCallback<RegisterResponse>() {
+                @Override
+                public void onSuccess(RegisterResponse data) {
+                    btnRegister.setEnabled(true);
+                    btnRegister.setText(R.string.btn_register);
+                    Toast.makeText(RegisterActivity.this, "Đăng ký thành công! Vui lòng đăng nhập.", Toast.LENGTH_LONG).show();
+
+                    Intent resultIntent = new Intent();
+                    resultIntent.putExtra("registered_username", username);
+                    setResult(RESULT_OK, resultIntent);
+                    finish();
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    btnRegister.setEnabled(true);
+                    btnRegister.setText(R.string.btn_register);
+                    Toast.makeText(RegisterActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                }
+            });
         });
     }
 }

@@ -20,6 +20,8 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ht.robotvacuumapp.auth.TokenManager;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,6 +48,15 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Check if user is logged in
+        if (!TokenManager.getInstance(this).isLoggedIn()) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
@@ -141,7 +152,20 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
             case 2:
                 imgTabMine.setColorFilter(colorActive);
                 tvTabMine.setTextColor(colorActive);
-                Toast.makeText(this, "Màn hình Cá nhân (Mine)", Toast.LENGTH_SHORT).show();
+                String name = TokenManager.getInstance(this).getUserName();
+                String username = TokenManager.getInstance(this).getUsername();
+                String role = TokenManager.getInstance(this).getUserRole();
+                new AlertDialog.Builder(this)
+                        .setTitle("Tài khoản người dùng")
+                        .setMessage("Họ tên: " + name + "\nTên đăng nhập: " + username + "\nVai trò: " + role)
+                        .setPositiveButton("Đăng xuất", (dialog, which) -> {
+                            TokenManager.getInstance(this).clearSession();
+                            Intent intent = new Intent(this, LoginActivity.class);
+                            startActivity(intent);
+                            finish();
+                        })
+                        .setNegativeButton("Đóng", null)
+                        .show();
                 break;
         }
     }

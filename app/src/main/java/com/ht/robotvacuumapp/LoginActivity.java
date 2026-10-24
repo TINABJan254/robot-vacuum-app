@@ -1,5 +1,6 @@
 package com.ht.robotvacuumapp;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
@@ -17,12 +18,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import com.ht.robotvacuumapp.auth.AuthRepository;
+import com.ht.robotvacuumapp.network.ApiConfig;
+import com.ht.robotvacuumapp.network.model.LoginResponse;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -37,9 +44,24 @@ public class LoginActivity extends AppCompatActivity {
     private TextView tvForgotPassword;
     private AppCompatButton btnLogin;
     private TextView tvRegisterPrompt;
+    private ImageView btnServerSettings;
 
     private boolean isPasswordVisible = false;
     private SharedPreferences sharedPreferences;
+    private AuthRepository authRepository;
+
+    private final ActivityResultLauncher<Intent> registerLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    String registeredUsername = result.getData().getStringExtra("registered_username");
+                    if (registeredUsername != null && !registeredUsername.isEmpty()) {
+                        edtUsername.setText(registeredUsername);
+                        edtPassword.requestFocus();
+                    }
+                }
+            }
+    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,12 +76,14 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        authRepository = new AuthRepository(this);
 
         initViews();
         loadSavedCredentials();
         setupPasswordToggle();
         setupRegisterPrompt();
         setupForgotPassword();
+        setupServerSettings();
         setupLoginAction();
     }
 
@@ -71,6 +95,7 @@ public class LoginActivity extends AppCompatActivity {
         tvForgotPassword = findViewById(R.id.tv_forgot_password);
         btnLogin = findViewById(R.id.btn_login);
         tvRegisterPrompt = findViewById(R.id.tv_register_prompt);
+        btnServerSettings = findViewById(R.id.btn_server_settings);
     }
 
     private void loadSavedCredentials() {
@@ -114,7 +139,7 @@ public class LoginActivity extends AppCompatActivity {
         tvRegisterPrompt.setText(builder);
         tvRegisterPrompt.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
-            startActivity(intent);
+            registerLauncher.launch(intent);
         });
     }
 
@@ -122,6 +147,40 @@ public class LoginActivity extends AppCompatActivity {
         tvForgotPassword.setOnClickListener(v -> {
             Toast.makeText(this, "Chức năng khôi phục mật khẩu đang phát triển", Toast.LENGTH_SHORT).show();
         });
+    }
+
+    private void setupServerSettings() {
+        if (btnServerSettings != null) {
+            btnServerSettings.setOnClickListener(v -> showServerConfigDialog());
+        }
+    }
+
+    private void showServerConfigDialog() {
+        EditText input = new EditText(this);
+        input.setText(ApiConfig.getBaseUrl(this));
+        input.setHint("http://192.168.x.x:8080/");
+        input.setSingleLine(true);
+        input.setPadding(40, 30, 40, 30);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Cấu hình IP Backend (LAN)")
+                .setMessage("Nhập địa chỉ máy chủ backend trong mạng LAN:")
+                .setView(input)
+                .setPositiveButton("Lưu", (dialog, which) -> {
+                    String newUrl = input.getText().toString().trim();
+                    if (!newUrl.isEmpty()) {
+                        ApiConfig.setBaseUrl(this, newUrl);
+                        authRepository = new AuthRepository(this);
+                        Toast.makeText(this, "Đã lưu máy chủ: " + ApiConfig.getBaseUrl(this), Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .setNeutralButton("Mặc định", (dialog, which) -> {
+                    ApiConfig.setBaseUrl(this, ApiConfig.DEFAULT_BASE_URL);
+                    authRepository = new AuthRepository(this);
+                    Toast.makeText(this, "Đã đặt về mặc định: " + ApiConfig.DEFAULT_BASE_URL, Toast.LENGTH_SHORT).show();
+                })
+                .show();
     }
 
     private void setupLoginAction() {
@@ -141,23 +200,45 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
-            // Save or clear remember me preference
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            if (cbRememberMe.isChecked()) {
-                editor.putBoolean(KEY_REMEMBER_ME, true);
-                editor.putString(KEY_SAVED_USERNAME, username);
-            } else {
-                editor.putBoolean(KEY_REMEMBER_ME, false);
-                editor.remove(KEY_SAVED_USERNAME);
-            }
-            editor.apply();
+            // Call Login API
+            btnLogin.setEnabled(false);
+            btnLogin.setText("Đang đăng nhập...");
 
-            Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
+            authRepository.login(username, password, new AuthRepository.AuthCallback<LoginResponse>() {
+                @Override
+                public void onSuccess(LoginResponse data) {
+                    btnLogin.setEnabled(true);
+                    btnLogin.setText(R.string.btn_login);
 
-            // Navigate to MainActivity after successful login
-            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-            startActivity(intent);
-            finish();
+                    // Save or clear remember me preference
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    if (cbRememberMe.isChecked()) {
+                        editor.putBoolean(KEY_REMEMBER_ME, true);
+                        editor.putString(KEY_SAVED_USERNAME, username);
+                    } else {
+                        editor.putBoolean(KEY_REMEMBER_ME, false);
+                        editor.remove(KEY_SAVED_USERNAME);
+                    }
+                    editor.apply();
+
+                    String displayName = (data.getUser() != null && data.getUser().getName() != null)
+                            ? data.getUser().getName()
+                            : username;
+                    Toast.makeText(LoginActivity.this, "Đăng nhập thành công! Chào " + displayName, Toast.LENGTH_SHORT).show();
+
+                    // Navigate to MainActivity after successful login
+                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    btnLogin.setEnabled(true);
+                    btnLogin.setText(R.string.btn_login);
+                    Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                }
+            });
         });
     }
 }

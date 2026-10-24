@@ -16,6 +16,18 @@
         android:paddingTop="48dp"
         android:paddingBottom="24dp">
 
+        <!-- Server Settings Button (LAN IP config) -->
+        <ImageView
+            android:id="@+id/btn_server_settings"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Cài đặt IP máy chủ"
+            android:padding="6dp"
+            android:src="@drawable/ic_settings"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <!-- Title: Đăng nhập -->
         <TextView
             android:id="@+id/tv_title"
