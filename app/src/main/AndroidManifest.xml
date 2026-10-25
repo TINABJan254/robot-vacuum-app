@@ -16,7 +16,7 @@
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.RobotVacuumApp">
         <activity
-            android:name=".MainActivity"
+            android:name=".view.home.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,13 +25,13 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".LoginActivity"
+            android:name=".view.auth.LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".RegisterActivity"
+            android:name=".view.auth.RegisterActivity"
             android:exported="false" />
         <activity
-            android:name=".RobotControlActivity"
+            android:name=".view.robot.RobotControlActivity"
             android:exported="false" />
     </application>
 
