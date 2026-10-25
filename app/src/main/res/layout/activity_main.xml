@@ -197,15 +197,16 @@
     <LinearLayout
         android:id="@+id/bottom_nav_bar"
         android:layout_width="0dp"
-        android:layout_height="62dp"
+        android:layout_height="64dp"
         android:background="@color/white"
-        android:elevation="6dp"
+        android:elevation="8dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <!-- Tab 1: Robot -->
+        <!-- Tab 1: Danh sách -->
         <LinearLayout
             android:id="@+id/tab_robot"
             android:layout_width="0dp"
@@ -222,49 +223,46 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:contentDescription="@null"
-                android:src="@drawable/ic_nav_robot" />
+                android:src="@drawable/ic_nav_list" />
 
             <TextView
                 android:id="@+id/tv_tab_robot"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:text="@string/tab_robot"
-                android:textColor="@color/primary_green"
-                android:textSize="11sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="4dp"
+                android:text="@string/tab_device_list"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
         </LinearLayout>
 
-        <!-- Tab 2: Không gian -->
-        <LinearLayout
+        <!-- Tab 2: Middle Cube Button (Bản đồ / Không gian) -->
+        <FrameLayout
             android:id="@+id/tab_space"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="?attr/selectableItemBackground"
             android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:orientation="vertical">
+            android:focusable="true">
 
-            <ImageView
-                android:id="@+id/img_tab_space"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_nav_space" />
+            <FrameLayout
+                android:id="@+id/container_tab_space"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_nav_center_cube_active">
 
-            <TextView
-                android:id="@+id/tv_tab_space"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:text="@string/tab_space"
-                android:textColor="@color/text_secondary"
-                android:textSize="11sp" />
-        </LinearLayout>
+                <ImageView
+                    android:id="@+id/img_tab_space"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_nav_cube" />
+            </FrameLayout>
+        </FrameLayout>
 
-        <!-- Tab 3: Mine -->
+        <!-- Tab 3: Tài khoản -->
         <LinearLayout
             android:id="@+id/tab_mine"
             android:layout_width="0dp"
@@ -287,8 +285,8 @@
                 android:id="@+id/tv_tab_mine"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:text="@string/tab_mine"
+                android:layout_marginTop="4dp"
+                android:text="@string/tab_account"
                 android:textColor="@color/text_secondary"
                 android:textSize="11sp" />
         </LinearLayout>

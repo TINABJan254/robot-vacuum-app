@@ -27,8 +27,10 @@
     <string name="header_online_devices">THIẾT BỊ TRỰC TUYẾN (%1$d)</string>
     <string name="action_sort">Sắp xếp</string>
     <string name="tab_robot">Robot</string>
+    <string name="tab_device_list">Danh sách</string>
     <string name="tab_space">Không gian</string>
     <string name="tab_mine">Mine</string>
+    <string name="tab_account">Tài khoản</string>
     <string name="status_ready">Sẵn sàng</string>
     <string name="status_charging">Đang sạc</string>
     <string name="status_waiting">Chờ</string>

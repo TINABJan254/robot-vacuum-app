@@ -38,8 +38,9 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
 
     // Bottom Navigation
     private View tabRobot, tabSpace, tabMine;
+    private View containerTabSpace;
     private ImageView imgTabRobot, imgTabSpace, imgTabMine;
-    private TextView tvTabRobot, tvTabSpace, tvTabMine;
+    private TextView tvTabRobot, tvTabMine;
 
     private RobotAdapter robotAdapter;
     private final List<RobotDevice> robotList = new ArrayList<>();
@@ -90,11 +91,11 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
         tabRobot = findViewById(R.id.tab_robot);
         tabSpace = findViewById(R.id.tab_space);
         tabMine = findViewById(R.id.tab_mine);
+        containerTabSpace = findViewById(R.id.container_tab_space);
         imgTabRobot = findViewById(R.id.img_tab_robot);
         imgTabSpace = findViewById(R.id.img_tab_space);
         imgTabMine = findViewById(R.id.img_tab_mine);
         tvTabRobot = findViewById(R.id.tv_tab_robot);
-        tvTabSpace = findViewById(R.id.tv_tab_space);
         tvTabMine = findViewById(R.id.tv_tab_mine);
     }
 
@@ -125,6 +126,9 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
         tabRobot.setOnClickListener(v -> selectTab(0));
         tabSpace.setOnClickListener(v -> selectTab(1));
         tabMine.setOnClickListener(v -> selectTab(2));
+
+        // Default active tab to middle cube (index 1) as shown in mockup
+        selectTab(1);
     }
 
     private void selectTab(int index) {
@@ -134,8 +138,10 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
         // Reset all tabs
         imgTabRobot.setColorFilter(colorInactive);
         tvTabRobot.setTextColor(colorInactive);
+        if (containerTabSpace != null) {
+            containerTabSpace.setBackgroundResource(R.drawable.bg_nav_center_cube_inactive);
+        }
         imgTabSpace.setColorFilter(colorInactive);
-        tvTabSpace.setTextColor(colorInactive);
         imgTabMine.setColorFilter(colorInactive);
         tvTabMine.setTextColor(colorInactive);
 
@@ -145,9 +151,10 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
                 tvTabRobot.setTextColor(colorActive);
                 break;
             case 1:
+                if (containerTabSpace != null) {
+                    containerTabSpace.setBackgroundResource(R.drawable.bg_nav_center_cube_active);
+                }
                 imgTabSpace.setColorFilter(colorActive);
-                tvTabSpace.setTextColor(colorActive);
-                Toast.makeText(this, "Màn hình Không gian / Bản đồ", Toast.LENGTH_SHORT).show();
                 break;
             case 2:
                 imgTabMine.setColorFilter(colorActive);
@@ -157,7 +164,9 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
                 String role = TokenManager.getInstance(this).getUserRole();
                 new AlertDialog.Builder(this)
                         .setTitle("Tài khoản người dùng")
-                        .setMessage("Họ tên: " + name + "\nTên đăng nhập: " + username + "\nVai trò: " + role)
+                        .setMessage("Họ tên: " + (name != null && !name.isEmpty() ? name : "Người dùng")
+                                + "\nTên đăng nhập: " + username
+                                + "\nVai trò: " + role)
                         .setPositiveButton("Đăng xuất", (dialog, which) -> {
                             TokenManager.getInstance(this).clearSession();
                             Intent intent = new Intent(this, LoginActivity.class);
