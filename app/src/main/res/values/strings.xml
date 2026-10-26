@@ -45,4 +45,16 @@
     <string name="status_ready">Sẵn sàng</string>
     <string name="status_charging">Đang sạc</string>
     <string name="status_waiting">Chờ</string>
+
+    <!-- Robot Settings Strings -->
+    <string name="title_settings">Cài đặt</string>
+    <string name="setting_history">Nhật Ký</string>
+    <string name="setting_schedule">Đặt lịch dọn dẹp</string>
+    <string name="setting_schedule_subtitle">Không có lịch</string>
+    <string name="setting_other">Cài Đặt Khác</string>
+    <string name="setting_device_info">Thông tin thiết bị</string>
+    <string name="setting_delete_device">Xóa thiết bị</string>
+    <string name="dialog_edit_robot_name_title">Đổi tên robot</string>
+    <string name="dialog_edit_robot_name_hint">Nhập tên mới</string>
+    <string name="action_save">Lưu</string>
 </resources>

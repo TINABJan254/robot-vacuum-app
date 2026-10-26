@@ -1,5 +1,6 @@
 package com.ht.robotvacuumapp.view.robot;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -99,7 +100,9 @@ public class RobotControlActivity extends AppCompatActivity {
     private void setupTopBarActions() {
         btnBack.setOnClickListener(v -> finish());
         btnSettings.setOnClickListener(v -> {
-            Toast.makeText(this, "Cài đặt thiết bị " + tvRobotTitle.getText(), Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(RobotControlActivity.this, RobotSettingsActivity.class);
+            intent.putExtra(RobotSettingsActivity.EXTRA_ROBOT_NAME, tvRobotTitle.getText().toString());
+            startActivity(intent);
         });
     }
 

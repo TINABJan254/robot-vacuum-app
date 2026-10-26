@@ -17,6 +17,8 @@
     <!-- Input and Divider -->
     <color name="divider_line">#E8ECF4</color>
     <color name="icon_tint">#5A687D</color>
+    <color name="settings_bg">#F4F6F9</color>
+    <color name="color_danger">#E53935</color>
 
     <!-- Password Strength Colors -->
     <color name="strength_inactive">#E3E8F3</color>

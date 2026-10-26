@@ -33,6 +33,9 @@
         <activity
             android:name=".view.robot.RobotControlActivity"
             android:exported="false" />
+        <activity
+            android:name=".view.robot.RobotSettingsActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
