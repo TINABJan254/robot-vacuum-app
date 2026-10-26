@@ -7,7 +7,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ht.robotvacuumapp.R;
@@ -23,6 +22,8 @@ public class RobotAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     private final List<RobotCardItem> robotList = new ArrayList<>();
     private final OnRobotClickListener listener;
+    private List<RobotDevice> displayedRobots = new ArrayList<>();
+    private String selectedRobotId;
 
     public interface OnRobotClickListener {
         void onRobotClick(RobotDevice robot);
@@ -34,6 +35,9 @@ public class RobotAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     }
 
     public void submitRobots(List<RobotDevice> robots, String selectedId) {
+        if (displayedRobots.equals(robots) && Objects.equals(selectedRobotId, selectedId)) return;
+        displayedRobots = new ArrayList<>(robots);
+        selectedRobotId = selectedId;
         robotList.clear();
         for (RobotDevice robot : robots) {
             robotList.add(new RobotCardItem(robot, Objects.equals(robot.getId(), selectedId)));
@@ -94,8 +98,9 @@ public class RobotAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         public void bind(RobotCardItem item, OnRobotClickListener listener) {
             RobotDevice device = item.device;
             tvRobotName.setText(device.getName());
-            tvRobotRoom.setText(device.getRoom());
-            tvBattery.setText(device.getBatteryPercentage() + "%");
+            tvRobotRoom.setText(itemView.getContext().getString(R.string.robot_id_label, device.getId()));
+            tvBattery.setVisibility(View.INVISIBLE);
+            tvStatusBadge.setVisibility(View.INVISIBLE);
             imgRobot.setImageResource(item.iconResId);
 
             // Active border
@@ -103,18 +108,6 @@ public class RobotAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                 cardContainer.setBackgroundResource(R.drawable.bg_card_robot_active);
             } else {
                 cardContainer.setBackgroundResource(R.drawable.bg_card_robot_normal);
-            }
-
-            // Status styling
-            String status = device.getStatus();
-            if ("Sẵn sàng".equalsIgnoreCase(status)) {
-                tvStatusBadge.setText("● " + status);
-                tvStatusBadge.setBackgroundResource(R.drawable.bg_badge_status_ready);
-                tvStatusBadge.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.primary_green));
-            } else {
-                tvStatusBadge.setText(status);
-                tvStatusBadge.setBackgroundResource(R.drawable.bg_badge_status_normal);
-                tvStatusBadge.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.text_secondary));
             }
 
             cardContainer.setOnClickListener(v -> {

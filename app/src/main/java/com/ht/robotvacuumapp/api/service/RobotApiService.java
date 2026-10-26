@@ -1,0 +1,20 @@
+package com.ht.robotvacuumapp.api.service;
+
+import com.ht.robotvacuumapp.api.dto.PairRobotRequest;
+import com.ht.robotvacuumapp.api.dto.RobotPageResponse;
+import com.ht.robotvacuumapp.api.dto.RobotResponse;
+import retrofit2.Call;
+import retrofit2.http.Body;
+import retrofit2.http.GET;
+import retrofit2.http.Header;
+import retrofit2.http.POST;
+import retrofit2.http.Query;
+
+public interface RobotApiService {
+    @POST("api/v1/robots/pair")
+    Call<RobotResponse> pairRobot(@Header("Authorization") String authorization, @Body PairRobotRequest request);
+
+    @GET("api/v1/robots")
+    Call<RobotPageResponse> getRobots(@Header("Authorization") String authorization,
+                                     @Query("page") int page, @Query("size") int size, @Query("sort") String sort);
+}

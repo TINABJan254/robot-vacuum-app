@@ -22,9 +22,20 @@
     <!-- Home Screen Strings -->
     <string name="title_vacuum_robot">Vacuum Robot</string>
     <string name="empty_robot_title">Bạn chưa có robot</string>
-    <string name="empty_robot_subtitle">không tìm thấy thiết bị kết nối trong\nphạm vi</string>
+    <string name="empty_robot_subtitle">Thêm robot bằng ID và mã ghép nối\nđược cung cấp cùng thiết bị.</string>
     <string name="btn_add_robot">Thêm Robot</string>
-    <string name="header_online_devices">THIẾT BỊ TRỰC TUYẾN (%1$d)</string>
+    <string name="header_online_devices">THIẾT BỊ (%1$d)</string>
+    <string name="action_refresh">Làm mới</string>
+    <string name="action_retry">Thử lại</string>
+    <string name="loading_robots">Đang tải danh sách robot…</string>
+    <string name="pair_robot_title">Thêm Robot</string>
+    <string name="pair_robot_description">Nhập ID số và mã ghép nối của robot. Mã phân biệt chữ hoa, chữ thường và khoảng trắng.</string>
+    <string name="hint_robot_id">ID robot (ví dụ: 12)</string>
+    <string name="hint_pair_code">Mã ghép nối</string>
+    <string name="action_pair">Ghép nối</string>
+    <string name="pairing_robot">Đang ghép nối…</string>
+    <string name="action_cancel">Hủy</string>
+    <string name="robot_id_label">ID: %1$s</string>
     <string name="action_sort">Sắp xếp</string>
     <string name="tab_robot">Robot</string>
     <string name="tab_device_list">Danh sách</string>

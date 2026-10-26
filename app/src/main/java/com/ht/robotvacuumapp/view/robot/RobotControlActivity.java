@@ -113,7 +113,7 @@ public class RobotControlActivity extends AppCompatActivity {
 
     private void render(RobotControlUiState state) {
         tvRobotTitle.setText(state.robotName);
-        tvBatteryPercent.setText(state.batteryPercent + " %");
+        tvBatteryPercent.setText(state.batteryPercent < 0 ? "-- %" : state.batteryPercent + " %");
         btnToggleMode.setText(state.autoMode ? "Auto" : "Manual");
         int primaryGreen = ContextCompat.getColor(this, R.color.primary_green);
         int textSecondary = ContextCompat.getColor(this, R.color.text_secondary);

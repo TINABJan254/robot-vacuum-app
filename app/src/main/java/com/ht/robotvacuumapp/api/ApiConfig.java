@@ -10,7 +10,7 @@ public class ApiConfig {
     private static final String KEY_BASE_URL = "base_url";
 
     // Default LAN backend URL
-    public static final String DEFAULT_BASE_URL = "http://172.20.10.2:8080/";
+    public static final String DEFAULT_BASE_URL = "http://10.1.0.129:8080/";
 
     public static String getBaseUrl(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);

@@ -5,18 +5,26 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import com.ht.robotvacuumapp.model.entity.RobotDevice;
 import com.ht.robotvacuumapp.model.repository.AuthRepository;
-import com.ht.robotvacuumapp.model.repository.DemoRobotRepository;
+import com.ht.robotvacuumapp.model.repository.RobotRepository;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MainViewModel extends ViewModel {
     private final AuthRepository auth;
-    private final DemoRobotRepository robots;
+    private final RobotRepository robots;
     private final MutableLiveData<MainUiState> state;
+    private int operation;
+    private boolean cleared;
 
-    public MainViewModel(AuthRepository auth, DemoRobotRepository robots) {
+    public MainViewModel(AuthRepository auth, RobotRepository robots) {
         this.auth = auth;
         this.robots = robots;
-        state = new MutableLiveData<>(new MainUiState(robots.getDevices(), "1", 1, !auth.isLoggedIn(),
-                null, null, false, null, null));
+        MainUiState.Builder initial = new MainUiState.Builder();
+        initial.requiresLogin = !auth.isLoggedIn();
+        state = new MutableLiveData<>(initial.build());
+        if (!initial.requiresLogin) loadRobots();
     }
 
     public LiveData<MainUiState> getUiState() { return state; }
@@ -24,61 +32,177 @@ public class MainViewModel extends ViewModel {
     public String getUsername() { return auth.getUsername(); }
     public String getUserRole() { return auth.getUserRole(); }
 
-    public void selectTab(int tab) {
+    public void loadRobots() {
         MainUiState s = state.getValue();
-        state.setValue(new MainUiState(s.robots, s.selectedRobotId, tab, s.requiresLogin,
-                s.robotIdError, s.robotCodeError, s.robotAdded, s.robotToOpen, s.message));
+        if (cleared || s.requiresLogin || s.isLoadingRobots || s.isPairing) return;
+        int current = ++operation;
+        MainUiState.Builder next = s.toBuilder();
+        next.isLoadingRobots = true;
+        next.listError = null;
+        state.setValue(next.build());
+        robots.getRobots(new RobotRepository.Callback<List<RobotDevice>>() {
+            @Override public void onSuccess(List<RobotDevice> result) {
+                if (!isCurrent(current)) return;
+                MainUiState.Builder b = state.getValue().toBuilder();
+                b.robots = result;
+                b.robotsLoaded = true;
+                b.isLoadingRobots = false;
+                b.listError = null;
+                if (b.selectedRobotId != null && result.stream().noneMatch(r -> r.getId().equals(b.selectedRobotId))) {
+                    b.selectedRobotId = null;
+                }
+                state.setValue(b.build());
+            }
+            @Override public void onError(int status, String message, Map<String, String> fields) {
+                if (!isCurrent(current)) return;
+                if (status == 401) {
+                    expireSession(message);
+                    return;
+                }
+                MainUiState.Builder b = state.getValue().toBuilder();
+                b.isLoadingRobots = false;
+                b.listError = message;
+                state.setValue(b.build());
+            }
+        });
     }
 
-    public void addRobot(String rawId, String rawCode) {
-        String id = rawId.trim();
-        String code = rawCode.trim();
+    public void selectTab(int tab) {
+        MainUiState.Builder b = state.getValue().toBuilder();
+        b.selectedTab = tab;
+        state.setValue(b.build());
+    }
+
+    public void openPairDialog() {
+        if (state.getValue().requiresLogin || state.getValue().pairDialogOpen) return;
+        MainUiState.Builder b = state.getValue().toBuilder();
+        b.pairDialogOpen = true;
+        state.setValue(b.build());
+    }
+
+    public void updatePairDraft(String id, String code) {
         MainUiState s = state.getValue();
-        if (id.isEmpty() || code.isEmpty()) {
-            state.setValue(new MainUiState(s.robots, s.selectedRobotId, s.selectedTab, s.requiresLogin,
-                    id.isEmpty() ? "Vui lòng nhập ID robot" : null,
-                    code.isEmpty() ? "Vui lòng nhập mã code" : null, false, null, null));
+        if (s.isPairing || !s.pairDialogOpen || (s.draftRobotId.equals(id) && s.draftPairCode.equals(code))) return;
+        MainUiState.Builder b = s.toBuilder();
+        b.draftRobotId = id;
+        b.draftPairCode = code;
+        b.robotIdError = null;
+        b.robotCodeError = null;
+        b.pairError = null;
+        state.setValue(b.build());
+    }
+
+    public void closePairDialog() {
+        MainUiState s = state.getValue();
+        if (s.isPairing) return;
+        MainUiState.Builder b = s.toBuilder();
+        b.pairDialogOpen = false;
+        b.draftRobotId = "";
+        b.draftPairCode = "";
+        b.robotIdError = null;
+        b.robotCodeError = null;
+        b.pairError = null;
+        state.setValue(b.build());
+    }
+
+    public void pairRobot() {
+        MainUiState s = state.getValue();
+        if (cleared || s.requiresLogin || !s.pairDialogOpen || s.isPairing || s.isLoadingRobots) return;
+        MainUiState.Builder b = s.toBuilder();
+        String idText = s.draftRobotId.trim();
+        b.robotIdError = null;
+        b.robotCodeError = null;
+        Long id = null;
+        try {
+            if (!idText.matches("[0-9]+")) throw new NumberFormatException();
+            id = Long.parseLong(idText);
+            if (id <= 0) throw new NumberFormatException();
+        } catch (NumberFormatException error) {
+            b.robotIdError = "ID robot phải là số nguyên dương hợp lệ.";
+        }
+        if (s.draftPairCode.trim().isEmpty()) b.robotCodeError = "Vui lòng nhập mã ghép nối.";
+        else if (s.draftPairCode.length() > 255) b.robotCodeError = "Mã ghép nối không được quá 255 ký tự.";
+        if (b.robotIdError != null || b.robotCodeError != null) {
+            state.setValue(b.build());
             return;
         }
-        robots.add(id);
-        state.setValue(new MainUiState(robots.getDevices(), s.selectedRobotId, s.selectedTab, s.requiresLogin,
-                null, null, true, null, "Đã thêm thành công: " + id + " (Code: " + code + ")"));
-    }
-
-    public void clearRobots() {
-        robots.clear();
-        publishDevices(null, "Đang hiển thị giao diện: Chưa có robot");
-    }
-
-    public void restoreRobots() {
-        robots.restoreSamples();
-        publishDevices("1", "Đã khôi phục danh sách robot");
-    }
-
-    private void publishDevices(String selectedId, String message) {
-        MainUiState s = state.getValue();
-        state.setValue(new MainUiState(robots.getDevices(), selectedId, s.selectedTab, s.requiresLogin,
-                null, null, false, null, message));
+        b.isPairing = true;
+        b.pairError = null;
+        b.message = null;
+        state.setValue(b.build());
+        int current = ++operation;
+        robots.pairRobot(id, s.draftPairCode, new RobotRepository.Callback<RobotDevice>() {
+            @Override public void onSuccess(RobotDevice result) {
+                if (!isCurrent(current)) return;
+                MainUiState.Builder next = state.getValue().toBuilder();
+                Map<String, RobotDevice> unique = new LinkedHashMap<>();
+                for (RobotDevice device : next.robots) unique.put(device.getId(), device);
+                unique.put(result.getId(), result);
+                next.robots = new ArrayList<>(unique.values());
+                next.robotsLoaded = true;
+                next.selectedRobotId = result.getId();
+                next.isPairing = false;
+                next.pairDialogOpen = false;
+                next.draftRobotId = "";
+                next.draftPairCode = "";
+                next.robotIdError = null;
+                next.robotCodeError = null;
+                next.pairError = null;
+                next.message = "Đã thêm robot: " + result.getName();
+                state.setValue(next.build());
+            }
+            @Override public void onError(int status, String message, Map<String, String> fields) {
+                if (!isCurrent(current)) return;
+                if (status == 401) {
+                    expireSession(message);
+                    return;
+                }
+                MainUiState.Builder next = state.getValue().toBuilder();
+                next.isPairing = false;
+                next.pairError = message;
+                next.robotIdError = fields.get("robotId");
+                next.robotCodeError = fields.get("pairCode");
+                state.setValue(next.build());
+            }
+        });
     }
 
     public void selectRobot(RobotDevice robot) {
-        MainUiState s = state.getValue();
-        state.setValue(new MainUiState(s.robots, robot.getId(), s.selectedTab, s.requiresLogin,
-                null, null, false, robot, null));
+        if (state.getValue().requiresLogin) return;
+        MainUiState.Builder b = state.getValue().toBuilder();
+        b.selectedRobotId = robot.getId();
+        b.robotToOpen = robot;
+        state.setValue(b.build());
     }
 
-    public void logout() {
+    public void logout() { expireSession(null); }
+
+    private void expireSession(String message) {
+        ++operation;
+        robots.cancelPendingRequests();
+        auth.cancelPendingRequests();
         auth.logout();
-        MainUiState s = state.getValue();
-        state.setValue(new MainUiState(s.robots, s.selectedRobotId, s.selectedTab, true,
-                null, null, false, null, null));
+        MainUiState.Builder b = new MainUiState.Builder();
+        b.requiresLogin = true;
+        b.message = message;
+        state.setValue(b.build());
     }
 
     public void acknowledgeFeedback() {
-        MainUiState s = state.getValue();
-        state.setValue(new MainUiState(s.robots, s.selectedRobotId, s.selectedTab, s.requiresLogin,
-                null, null, false, null, null));
+        MainUiState.Builder b = state.getValue().toBuilder();
+        b.robotToOpen = null;
+        b.message = null;
+        state.setValue(b.build());
     }
 
-    @Override protected void onCleared() { auth.cancelPendingRequests(); }
+    private boolean isCurrent(int current) {
+        return !cleared && operation == current && !state.getValue().requiresLogin;
+    }
+
+    @Override protected void onCleared() {
+        cleared = true;
+        ++operation;
+        robots.cancelPendingRequests();
+        auth.cancelPendingRequests();
+    }
 }

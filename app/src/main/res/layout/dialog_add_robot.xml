@@ -11,7 +11,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Thêm Robot mới"
+        android:text="@string/pair_robot_title"
         android:textColor="@color/text_title"
         android:textSize="20sp"
         android:textStyle="bold" />
@@ -20,7 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:text="Vui lòng nhập ID và mã xác thực (Code) của thiết bị robot hút bụi"
+        android:text="@string/pair_robot_description"
         android:textColor="@color/text_secondary"
         android:textSize="13sp" />
 
@@ -51,9 +51,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:background="@null"
-                android:hint="Nhập Robot ID (ví dụ: Robot_04)"
+                android:hint="@string/hint_robot_id"
                 android:imeOptions="actionNext"
-                android:inputType="text"
+                android:inputType="number"
                 android:maxLines="1"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_hint"
@@ -94,9 +94,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:background="@null"
-                android:hint="Nhập mã kết nối (Code)"
+                android:hint="@string/hint_pair_code"
                 android:imeOptions="actionDone"
-                android:inputType="text"
+                android:inputType="textVisiblePassword|textNoSuggestions"
                 android:maxLines="1"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_hint"
@@ -109,6 +109,16 @@
             android:layout_marginTop="4dp"
             android:background="@color/divider_line" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_pair_error"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:accessibilityLiveRegion="polite"
+        android:textColor="@color/strength_weak"
+        android:textSize="13sp"
+        android:visibility="gone" />
 
     <!-- Dialog Action Buttons -->
     <LinearLayout
@@ -127,7 +137,7 @@
             android:focusable="true"
             android:paddingHorizontal="16dp"
             android:paddingVertical="10dp"
-            android:text="Hủy"
+            android:text="@string/action_cancel"
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:textStyle="bold" />
@@ -141,7 +151,7 @@
             android:elevation="0dp"
             android:paddingHorizontal="24dp"
             android:stateListAnimator="@null"
-            android:text="Thêm"
+            android:text="@string/action_pair"
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:textSize="14sp"

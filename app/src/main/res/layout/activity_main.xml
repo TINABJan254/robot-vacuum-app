@@ -165,7 +165,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:text="THIẾT BỊ TRỰC TUYẾN (3)" />
+                tools:text="THIẾT BỊ (3)" />
 
             <TextView
                 android:id="@+id/tv_sort"
@@ -173,13 +173,23 @@
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:padding="4dp"
-                android:text="@string/action_sort"
+                android:text="@string/action_refresh"
                 android:textColor="@color/text_primary"
                 android:textSize="12sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <TextView
+            android:id="@+id/tv_list_error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="6dp"
+            android:accessibilityLiveRegion="polite"
+            android:textColor="@color/strength_weak"
+            android:textSize="13sp"
+            android:visibility="gone" />
 
         <!-- Robots 2-Column Grid -->
         <androidx.recyclerview.widget.RecyclerView
@@ -191,6 +201,43 @@
             android:paddingBottom="12dp"
             tools:listitem="@layout/item_robot_device" />
 
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_robot_load_state"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/top_bar"
+        app:layout_constraintBottom_toTopOf="@id/bottom_nav_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ProgressBar
+            android:id="@+id/progress_robot_list"
+            android:layout_width="40dp"
+            android:layout_height="40dp" />
+
+        <TextView
+            android:id="@+id/tv_robot_load_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:accessibilityLiveRegion="polite"
+            android:gravity="center"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_retry_robots"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/action_retry"
+            android:textAllCaps="false" />
     </LinearLayout>
 
     <!-- Bottom Navigation Bar -->

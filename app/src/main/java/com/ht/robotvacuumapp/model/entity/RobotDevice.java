@@ -9,6 +9,10 @@ public final class RobotDevice {
     private final int batteryPercentage;
     private final boolean square;
 
+    public RobotDevice(String id, String name) {
+        this(id, name, null, null, -1, false);
+    }
+
     public RobotDevice(String id, String name, String room, String status, int batteryPercentage, boolean square) {
         this.id = id;
         this.name = name;
