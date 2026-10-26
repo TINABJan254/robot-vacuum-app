@@ -57,4 +57,12 @@
     <string name="dialog_edit_robot_name_title">Đổi tên robot</string>
     <string name="dialog_edit_robot_name_hint">Nhập tên mới</string>
     <string name="action_save">Lưu</string>
+
+    <!-- Schedule Cleaning Strings -->
+    <string name="schedule_empty_hint">Kiểm tra lịch dọn dẹp của bạn.</string>
+    <string name="schedule_notice_hint">Đặt robot trên sàn bạn muốn làm sạch trước khi kích hoạt Lịch làm sạch</string>
+    <string name="schedule_default_tz">GMT+07:00</string>
+    <string name="schedule_mode_auto">Dọn dẹp tự động</string>
+    <string name="schedule_days_workdays">Ngày làm việc</string>
+    <string name="action_add">Thêm</string>
 </resources>

@@ -77,9 +77,11 @@ public class RobotSettingsActivity extends AppCompatActivity {
                 Toast.makeText(this, "Nhật ký hoạt động", Toast.LENGTH_SHORT).show()
         );
 
-        rowSchedule.setOnClickListener(v ->
-                Toast.makeText(this, "Đặt lịch dọn dẹp", Toast.LENGTH_SHORT).show()
-        );
+        rowSchedule.setOnClickListener(v -> {
+            Intent intent = new Intent(this, RobotScheduleActivity.class);
+            intent.putExtra(RobotScheduleActivity.EXTRA_ROBOT_NAME, currentRobotName);
+            startActivity(intent);
+        });
 
         rowOtherSettings.setOnClickListener(v ->
                 Toast.makeText(this, "Cài đặt khác", Toast.LENGTH_SHORT).show()
