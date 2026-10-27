@@ -11,6 +11,7 @@ import com.ht.robotvacuumapp.api.dto.RobotResponse;
 import com.ht.robotvacuumapp.api.dto.UpdateRobotNameRequest;
 import com.ht.robotvacuumapp.api.service.RobotApiService;
 import com.ht.robotvacuumapp.model.entity.RobotDevice;
+import com.ht.robotvacuumapp.model.entity.RobotTelemetry;
 import com.ht.robotvacuumapp.model.local.TokenManager;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,7 +29,7 @@ import retrofit2.Response;
 
 /** Backend robot data and requests owned by one screen's ViewModel. */
 public class RobotRepository {
-    private enum Operation { PAIR, READ, RENAME, UNPAIR }
+    private enum Operation { PAIR, READ, RENAME, UNPAIR, TELEMETRY }
     private final Supplier<RobotApiService> services;
     private final Supplier<String> authorization;
     private final Set<Call<?>> requests = ConcurrentHashMap.newKeySet();
@@ -38,6 +39,30 @@ public class RobotRepository {
     public interface Callback<T> {
         void onSuccess(T result);
         void onError(int httpStatus, String message, Map<String, String> fieldErrors);
+    }
+
+    /** A successful read can explicitly contain no snapshot (HTTP 204). */
+    public static final class TelemetryResult {
+        public final RobotTelemetry snapshot;
+        private TelemetryResult(RobotTelemetry snapshot) { this.snapshot = snapshot; }
+        public static TelemetryResult noData() { return new TelemetryResult(null); }
+        public static TelemetryResult data(RobotTelemetry snapshot) {
+            return new TelemetryResult(java.util.Objects.requireNonNull(snapshot));
+        }
+    }
+
+    public void getTelemetry(long id, Callback<TelemetryResult> callback) {
+        if (id <= 0) {
+            callback.onError(400, "ID robot không hợp lệ.", Collections.emptyMap());
+            return;
+        }
+        String header = requireAuthorization(callback);
+        if (header == null) return;
+        enqueue(services.get().getTelemetry(header, id), generation.get(), Operation.TELEMETRY, callback, response -> {
+            RobotTelemetry snapshot = response.toSnapshot(id);
+            if (snapshot == null) invalidTelemetry(callback);
+            else callback.onSuccess(TelemetryResult.data(snapshot));
+        }, () -> callback.onSuccess(TelemetryResult.noData()));
     }
 
     public RobotRepository(Context context) {
@@ -147,15 +172,23 @@ public class RobotRepository {
     }
 
     private <T> void enqueue(Call<T> request, long current, Operation operation, Callback<?> callback, Consumer<T> success) {
+        enqueue(request, current, operation, callback, success, null);
+    }
+
+    private <T> void enqueue(Call<T> request, long current, Operation operation, Callback<?> callback,
+                             Consumer<T> success, Runnable noContent) {
         requests.add(request);
         request.enqueue(new retrofit2.Callback<T>() {
             @Override public void onResponse(Call<T> call, Response<T> response) {
                 requests.remove(call);
                 if (call.isCanceled() || current != generation.get()) return;
-                if (response.code() == 200 && response.body() != null) {
+                if (response.code() == 204 && noContent != null) {
+                    noContent.run();
+                } else if (response.code() == 200 && response.body() != null) {
                     success.accept(response.body());
                 } else if (response.isSuccessful()) {
-                    invalidResponse(callback);
+                    if (operation == Operation.TELEMETRY) invalidTelemetry(callback);
+                    else invalidResponse(callback);
                 } else {
                     readError(response.code(), response.errorBody(), operation, callback);
                 }
@@ -163,7 +196,9 @@ public class RobotRepository {
             @Override public void onFailure(Call<T> call, Throwable error) {
                 requests.remove(call);
                 if (call.isCanceled() || current != generation.get()) return;
-                callback.onError(0, "Không thể xác nhận kết quả từ máy chủ. Kiểm tra kết nối rồi tải lại danh sách hoặc thử lại.",
+                callback.onError(0, operation == Operation.TELEMETRY
+                                ? "Không tải được dữ liệu robot. Vui lòng kiểm tra kết nối và thử lại."
+                                : "Không thể xác nhận kết quả từ máy chủ. Kiểm tra kết nối rồi tải lại danh sách hoặc thử lại.",
                         Collections.emptyMap());
             }
         });
@@ -171,6 +206,10 @@ public class RobotRepository {
 
     private void invalidResponse(Callback<?> callback) {
         callback.onError(0, "Chưa xác nhận được kết quả từ máy chủ. Vui lòng tải lại danh sách hoặc thử lại.", Collections.emptyMap());
+    }
+
+    private void invalidTelemetry(Callback<?> callback) {
+        callback.onError(0, "Dữ liệu robot trả về không hợp lệ. Vui lòng thử lại.", Collections.emptyMap());
     }
 
     private void readError(int status, ResponseBody body, Operation operation, Callback<?> callback) {

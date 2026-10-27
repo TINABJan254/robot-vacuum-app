@@ -20,6 +20,10 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import com.ht.robotvacuumapp.R;
+import com.ht.robotvacuumapp.model.entity.RobotTelemetry;
+import com.ht.robotvacuumapp.model.repository.AuthRepository;
+import com.ht.robotvacuumapp.model.repository.RobotRepository;
+import com.ht.robotvacuumapp.view.auth.LoginActivity;
 import com.ht.robotvacuumapp.viewmodel.robot.RobotControlUiState;
 import com.ht.robotvacuumapp.viewmodel.robot.RobotControlViewModel;
 
@@ -53,6 +57,7 @@ public class RobotControlActivity extends AppCompatActivity {
 
     private RobotControlViewModel viewModel;
     private boolean finishingAfterUnpair;
+    private boolean navigatingToLogin;
 
     private final ActivityResultLauncher<Intent> settingsLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
@@ -84,7 +89,8 @@ public class RobotControlActivity extends AppCompatActivity {
                 return modelClass.cast(new RobotControlViewModel(
                         getIntent().getStringExtra(EXTRA_ROBOT_ID),
                         getIntent().getStringExtra(EXTRA_ROBOT_NAME),
-                        getIntent().getIntExtra(EXTRA_ROBOT_BATTERY, 93)));
+                        new RobotRepository(getApplicationContext()),
+                        new AuthRepository(getApplicationContext())));
             }
         }).get(RobotControlViewModel.class);
         setupTopBarActions();
@@ -127,14 +133,24 @@ public class RobotControlActivity extends AppCompatActivity {
     }
 
     private void setupModeToggle() {
-        btnToggleMode.setOnClickListener(v -> viewModel.toggleMode());
+        btnToggleMode.setOnClickListener(v -> viewModel.showControlUnavailable());
     }
 
     private void setupPlayPauseToggle() {
-        btnPlayPause.setOnClickListener(v -> viewModel.toggleWorking());
+        btnPlayPause.setOnClickListener(v -> viewModel.showControlUnavailable());
     }
 
     private void render(RobotControlUiState state) {
+        if (state.requiresLogin) {
+            if (!navigatingToLogin) {
+                navigatingToLogin = true;
+                if (state.message != null) Toast.makeText(this, state.message, Toast.LENGTH_LONG).show();
+                startActivity(new Intent(this, LoginActivity.class)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
+                finish();
+            }
+            return;
+        }
         if (state.robotUnpaired) {
             if (!finishingAfterUnpair) {
                 finishingAfterUnpair = true;
@@ -148,22 +164,7 @@ public class RobotControlActivity extends AppCompatActivity {
                     .putExtra(EXTRA_ROBOT_NAME, state.robotName));
         }
         tvRobotTitle.setText(state.robotName);
-        tvBatteryPercent.setText(state.batteryPercent < 0 ? "-- %" : state.batteryPercent + " %");
-        btnToggleMode.setText(state.autoMode ? "Auto" : "Manual");
-        int primaryGreen = ContextCompat.getColor(this, R.color.primary_green);
-        int textSecondary = ContextCompat.getColor(this, R.color.text_secondary);
-
-        if (state.status == RobotControlUiState.Status.WORKING) {
-            btnPlayPause.setImageResource(R.drawable.ic_pause);
-            tvStatus.setText("Working");
-            tvStatus.setTextColor(primaryGreen);
-            statusUnderline.setBackgroundColor(primaryGreen);
-        } else {
-            btnPlayPause.setImageResource(R.drawable.ic_play);
-            tvStatus.setText(state.status == RobotControlUiState.Status.CHARGING ? "Đang sạc" : "Paused");
-            tvStatus.setTextColor(textSecondary);
-            statusUnderline.setBackgroundColor(textSecondary);
-        }
+        renderTelemetry(state);
         if (state.message != null) {
             viewModel.acknowledgeFeedback();
             Toast.makeText(this, state.message, Toast.LENGTH_SHORT).show();
@@ -171,32 +172,63 @@ public class RobotControlActivity extends AppCompatActivity {
     }
 
     private void setupDpadControls() {
-        btnDpadUp.setOnClickListener(v -> {
-            Toast.makeText(this, "Tiến lên phía trước ▲", Toast.LENGTH_SHORT).show();
-        });
-
-        btnDpadDown.setOnClickListener(v -> {
-            Toast.makeText(this, "Lùi về phía sau ▼", Toast.LENGTH_SHORT).show();
-        });
-
-        btnDpadLeft.setOnClickListener(v -> {
-            Toast.makeText(this, "Rẽ sang trái ◀", Toast.LENGTH_SHORT).show();
-        });
-
-        btnDpadRight.setOnClickListener(v -> {
-            Toast.makeText(this, "Rẽ sang phải ▶", Toast.LENGTH_SHORT).show();
-        });
-
-        btnDpadCenter.setOnClickListener(v -> {
-            Toast.makeText(this, "Dừng tại vị trí hiện tại", Toast.LENGTH_SHORT).show();
-        });
-
-        btnPlus.setOnClickListener(v -> {
-            Toast.makeText(this, "Tăng công suất hút bụi (+)", Toast.LENGTH_SHORT).show();
-        });
+        for (View control : new View[]{btnDpadUp, btnDpadDown, btnDpadLeft, btnDpadRight, btnDpadCenter, btnPlus}) {
+            control.setOnClickListener(v -> viewModel.showControlUnavailable());
+        }
     }
 
     private void setupChargeAction() {
-        btnCharge.setOnClickListener(v -> viewModel.returnToDock());
+        btnCharge.setOnClickListener(v -> viewModel.showControlUnavailable());
+    }
+
+    private void renderTelemetry(RobotControlUiState state) {
+        RobotTelemetry t = state.telemetry;
+        tvBatteryPercent.setText(t == null ? getString(R.string.telemetry_battery_unknown)
+                : getString(R.string.telemetry_battery_percent, t.batteryPercent));
+        btnToggleMode.setText(t == null || t.mode == null ? R.string.telemetry_mode_unknown
+                : t.mode == RobotTelemetry.Mode.AUTO ? R.string.telemetry_mode_auto : R.string.telemetry_mode_manual);
+        boolean working = t != null && t.status == RobotTelemetry.Status.WORKING;
+        btnPlayPause.setImageResource(working ? R.drawable.ic_pause : R.drawable.ic_play);
+        btnPlayPause.setContentDescription(getString(working
+                ? R.string.telemetry_action_pause : R.string.telemetry_action_start));
+
+        String label;
+        int color = R.color.text_secondary;
+        if (t == null) {
+            label = state.telemetryError != null ? state.telemetryError
+                    : getString(state.isLoading || !state.telemetryLoaded
+                    ? R.string.telemetry_loading : R.string.telemetry_no_data);
+        } else {
+            label = getString(statusLabel(t.status));
+            if (t.status == RobotTelemetry.Status.ERROR) {
+                color = R.color.color_danger;
+            } else if (working) {
+                color = R.color.primary_green;
+            }
+        }
+        tvStatus.setText(label);
+        tvStatus.setContentDescription(label);
+        tvStatus.setTextColor(ContextCompat.getColor(this, color));
+        statusUnderline.setBackgroundColor(ContextCompat.getColor(this, color));
+    }
+
+    private int statusLabel(RobotTelemetry.Status status) {
+        switch (status) {
+            case WORKING: return R.string.telemetry_status_working;
+            case RETURNING_TO_DOCK: return R.string.telemetry_status_returning;
+            case CHARGING: return R.string.telemetry_status_charging;
+            case ERROR: return R.string.telemetry_status_error;
+            default: return R.string.telemetry_status_idle;
+        }
+    }
+
+    @Override protected void onStart() {
+        super.onStart();
+        if (!isFinishing()) viewModel.startTelemetry();
+    }
+
+    @Override protected void onStop() {
+        viewModel.stopTelemetry();
+        super.onStop();
     }
 }

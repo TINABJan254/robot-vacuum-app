@@ -82,4 +82,19 @@
     <string name="clean_opt_room">Phòng</string>
     <string name="clean_opt_area">Khu vực</string>
     <string name="action_ok">Ok</string>
+    <!-- Telemetry on the existing control screen -->
+    <string name="telemetry_battery_unknown">-- %</string>
+    <string name="telemetry_battery_percent">%1$d %%</string>
+    <string name="telemetry_mode_unknown">--</string>
+    <string name="telemetry_mode_auto">Auto</string>
+    <string name="telemetry_mode_manual">Manual</string>
+    <string name="telemetry_loading">Đang tải…</string>
+    <string name="telemetry_no_data">Chưa có dữ liệu</string>
+    <string name="telemetry_status_idle">Chờ</string>
+    <string name="telemetry_status_working">Đang dọn dẹp</string>
+    <string name="telemetry_status_returning">Đang về trạm</string>
+    <string name="telemetry_status_charging">Đang sạc</string>
+    <string name="telemetry_status_error">Có lỗi</string>
+    <string name="telemetry_action_pause">Tạm dừng</string>
+    <string name="telemetry_action_start">Bắt đầu</string>
 </resources>
