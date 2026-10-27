@@ -1,11 +1,14 @@
 package com.ht.robotvacuumapp.view.robot;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.graphics.Insets;
@@ -33,6 +36,34 @@ public class RobotScheduleActivity extends AppCompatActivity {
 
     private ScheduleAdapter adapter;
     private final List<ScheduleItem> scheduleList = new ArrayList<>();
+
+    private final ActivityResultLauncher<Intent> newScheduleLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    Intent data = result.getData();
+                    String timeStr = data.getStringExtra(NewScheduleActivity.EXTRA_RESULT_TIME);
+                    String modeStr = data.getStringExtra(NewScheduleActivity.EXTRA_RESULT_MODE);
+                    String repeatStr = data.getStringExtra(NewScheduleActivity.EXTRA_RESULT_REPEAT);
+
+                    if (timeStr == null || timeStr.isEmpty()) timeStr = "12:04";
+                    if (modeStr == null || modeStr.isEmpty()) modeStr = getString(R.string.schedule_mode_auto);
+                    if (repeatStr == null || repeatStr.isEmpty()) repeatStr = getString(R.string.schedule_days_workdays);
+
+                    ScheduleItem newItem = new ScheduleItem(
+                            String.valueOf(System.currentTimeMillis()),
+                            timeStr,
+                            "GMT+07:00",
+                            modeStr,
+                            repeatStr,
+                            true
+                    );
+                    scheduleList.add(newItem);
+                    adapter.notifyItemInserted(scheduleList.size() - 1);
+                    updateUIState();
+                }
+            }
+    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,8 +107,13 @@ public class RobotScheduleActivity extends AppCompatActivity {
     private void setupActions() {
         btnBack.setOnClickListener(v -> finish());
 
-        btnTopAdd.setOnClickListener(v -> addNewSchedule());
-        btnBottomAdd.setOnClickListener(v -> addNewSchedule());
+        btnTopAdd.setOnClickListener(v -> openNewScheduleScreen());
+        btnBottomAdd.setOnClickListener(v -> openNewScheduleScreen());
+    }
+
+    private void openNewScheduleScreen() {
+        Intent intent = new Intent(this, NewScheduleActivity.class);
+        newScheduleLauncher.launch(intent);
     }
 
     private void loadSampleSchedules() {
@@ -91,23 +127,6 @@ public class RobotScheduleActivity extends AppCompatActivity {
                 getString(R.string.schedule_days_workdays),
                 true
         ));
-    }
-
-    private void addNewSchedule() {
-        int nextHour = 8 + scheduleList.size();
-        String timeStr = String.format("%02d:00", (nextHour % 24));
-        ScheduleItem newItem = new ScheduleItem(
-                String.valueOf(System.currentTimeMillis()),
-                timeStr,
-                "GMT+07:00",
-                getString(R.string.schedule_mode_auto),
-                getString(R.string.schedule_days_workdays),
-                true
-        );
-        scheduleList.add(newItem);
-        adapter.notifyItemInserted(scheduleList.size() - 1);
-        updateUIState();
-        Toast.makeText(this, "Đã thêm lịch làm việc: " + timeStr, Toast.LENGTH_SHORT).show();
     }
 
     private void updateUIState() {

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet_dialog"
+    android:orientation="vertical"
+    android:paddingTop="12dp"
+    android:paddingBottom="16dp">
+
+    <!-- Top Action Bar in BottomSheet -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:paddingHorizontal="16dp">
+
+        <TextView
+            android:id="@+id/btn_cancel_time"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="8dp"
+            android:text="@string/action_cancel_schedule"
+            android:textColor="@color/text_secondary"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/btn_confirm_time"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="8dp"
+            android:text="@string/action_ok"
+            android:textColor="@color/text_title"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- Time Wheel Picker Area with Highlight Container -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="12dp">
+
+        <!-- Center Highlight Row -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:layout_marginHorizontal="20dp"
+            android:background="@drawable/bg_time_picker_selected_row" />
+
+        <!-- Two NumberPickers: Hour and Minute -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <!-- Hour Picker -->
+            <NumberPicker
+                android:id="@+id/picker_hour"
+                android:layout_width="90dp"
+                android:layout_height="180dp"
+                android:descendantFocusability="blocksDescendants" />
+
+            <View
+                android:layout_width="40dp"
+                android:layout_height="1dp" />
+
+            <!-- Minute Picker -->
+            <NumberPicker
+                android:id="@+id/picker_minute"
+                android:layout_width="90dp"
+                android:layout_height="180dp"
+                android:descendantFocusability="blocksDescendants" />
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <!-- Bottom Indicator Handle -->
+    <View
+        android:layout_width="134dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/bg_strength_bar_segment" />
+
+</LinearLayout>

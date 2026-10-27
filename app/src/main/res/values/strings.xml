@@ -65,4 +65,16 @@
     <string name="schedule_mode_auto">Dọn dẹp tự động</string>
     <string name="schedule_days_workdays">Ngày làm việc</string>
     <string name="action_add">Thêm</string>
+
+    <!-- New Schedule Strings -->
+    <string name="title_new_schedule">Lịch mới</string>
+    <string name="action_cancel_schedule">Hủy bỏ</string>
+    <string name="action_save_schedule">Lưu lại</string>
+    <string name="schedule_set_time">Đặt thời gian</string>
+    <string name="schedule_repeat">Lặp lại</string>
+    <string name="schedule_clean_options">Tùy chọn làm sạch</string>
+    <string name="clean_opt_auto">Tự động</string>
+    <string name="clean_opt_room">Phòng</string>
+    <string name="clean_opt_area">Khu vực</string>
+    <string name="action_ok">Ok</string>
 </resources>

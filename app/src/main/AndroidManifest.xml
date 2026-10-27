@@ -39,6 +39,9 @@
         <activity
             android:name=".view.robot.RobotScheduleActivity"
             android:exported="false" />
+        <activity
+            android:name=".view.robot.NewScheduleActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
