@@ -27,6 +27,7 @@ public class RobotControlActivity extends AppCompatActivity {
 
     public static final String EXTRA_ROBOT_NAME = "extra_robot_name";
     public static final String EXTRA_ROBOT_ID = "extra_robot_id";
+    public static final String EXTRA_ROBOT_UNPAIRED = "extra_robot_unpaired";
     public static final String EXTRA_ROBOT_BATTERY = "extra_robot_battery";
     public static final String EXTRA_ROBOT_STATUS = "extra_robot_status";
 
@@ -51,12 +52,17 @@ public class RobotControlActivity extends AppCompatActivity {
     private TextView btnCharge;
 
     private RobotControlViewModel viewModel;
+    private boolean finishingAfterUnpair;
 
     private final ActivityResultLauncher<Intent> settingsLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    viewModel.applyRenamedRobot(result.getData().getStringExtra(RobotSettingsActivity.EXTRA_ROBOT_ID),
-                            result.getData().getStringExtra(RobotSettingsActivity.EXTRA_ROBOT_NAME));
+                    String id = result.getData().getStringExtra(RobotSettingsActivity.EXTRA_ROBOT_ID);
+                    if (result.getData().getBooleanExtra(RobotSettingsActivity.EXTRA_ROBOT_UNPAIRED, false)) {
+                        viewModel.applyUnpairedRobot(id);
+                    } else {
+                        viewModel.applyRenamedRobot(id, result.getData().getStringExtra(RobotSettingsActivity.EXTRA_ROBOT_NAME));
+                    }
                 }
             });
 
@@ -129,6 +135,14 @@ public class RobotControlActivity extends AppCompatActivity {
     }
 
     private void render(RobotControlUiState state) {
+        if (state.robotUnpaired) {
+            if (!finishingAfterUnpair) {
+                finishingAfterUnpair = true;
+                setResult(RESULT_OK, new Intent().putExtra(EXTRA_ROBOT_ID, state.robotId).putExtra(EXTRA_ROBOT_UNPAIRED, true));
+                finish();
+            }
+            return;
+        }
         if (state.nameUpdated) {
             setResult(RESULT_OK, new Intent().putExtra(EXTRA_ROBOT_ID, state.robotId)
                     .putExtra(EXTRA_ROBOT_NAME, state.robotName));

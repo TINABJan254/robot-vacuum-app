@@ -54,6 +54,10 @@
     <string name="setting_other">Cài Đặt Khác</string>
     <string name="setting_device_info">Thông tin thiết bị</string>
     <string name="setting_delete_device">Xóa thiết bị</string>
+    <string name="unpair_robot_title">Gỡ thiết bị khỏi tài khoản</string>
+    <string name="action_unpair_robot">Gỡ thiết bị</string>
+    <string name="unpairing_robot">Đang gỡ…</string>
+    <string name="unpair_robot_confirmation">Bạn có chắc chắn muốn gỡ robot “%1$s” (ID: %2$s) khỏi tài khoản?.</string>
     <string name="dialog_edit_robot_name_title">Đổi tên robot</string>
     <string name="dialog_edit_robot_name_hint">Nhập tên mới</string>
     <string name="action_save">Lưu</string>

@@ -32,6 +32,7 @@ public class RobotSettingsActivity extends AppCompatActivity {
 
     public static final String EXTRA_ROBOT_NAME = "extra_robot_name";
     public static final String EXTRA_ROBOT_ID = "extra_robot_id";
+    public static final String EXTRA_ROBOT_UNPAIRED = "extra_robot_unpaired";
 
     private ImageView btnBack;
     private View rowRobotName;
@@ -40,14 +41,16 @@ public class RobotSettingsActivity extends AppCompatActivity {
     private View rowSchedule;
     private View rowOtherSettings;
     private View rowDeviceInfo;
-    private View btnDeleteDevice;
+    private View btnUnpairDevice;
 
     private RobotSettingsViewModel viewModel;
     private AlertDialog renameDialog;
+    private AlertDialog unpairDialog;
     private EditText edtNewName;
     private TextView tvRenameError;
     private boolean syncingDraft;
     private boolean navigatingToLogin;
+    private boolean finishingAfterUnpair;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +84,7 @@ public class RobotSettingsActivity extends AppCompatActivity {
         rowSchedule = findViewById(R.id.row_schedule);
         rowOtherSettings = findViewById(R.id.row_other_settings);
         rowDeviceInfo = findViewById(R.id.row_device_info);
-        btnDeleteDevice = findViewById(R.id.btn_delete_device);
+        btnUnpairDevice = findViewById(R.id.btn_delete_device);
 
     }
 
@@ -108,7 +111,7 @@ public class RobotSettingsActivity extends AppCompatActivity {
                 Toast.makeText(this, "Thông tin thiết bị", Toast.LENGTH_SHORT).show()
         );
 
-        btnDeleteDevice.setOnClickListener(v -> showDeleteConfirmDialog());
+        btnUnpairDevice.setOnClickListener(v -> viewModel.openUnpairDialog());
     }
 
     private void createRenameDialog(RobotSettingsUiState state) {
@@ -145,10 +148,16 @@ public class RobotSettingsActivity extends AppCompatActivity {
             openLogin(state.message);
             return;
         }
+        if (state.unpairedRobotId != null) {
+            finishWithUnpairing(state.unpairedRobotId);
+            return;
+        }
+        boolean busy = state.isSaving || state.isUnpairing;
         tvRobotName.setText(state.robotName);
-        rowRobotName.setEnabled(!state.isSaving && viewModel.hasValidRobotId());
-        for (View action : new View[]{btnBack, rowHistory, rowSchedule, rowOtherSettings, rowDeviceInfo, btnDeleteDevice}) {
-            action.setEnabled(!state.isSaving);
+        rowRobotName.setEnabled(!busy && !state.unpairDialogOpen && viewModel.hasValidRobotId());
+        btnUnpairDevice.setEnabled(!busy && !state.dialogOpen && viewModel.hasValidRobotId());
+        for (View action : new View[]{btnBack, rowHistory, rowSchedule, rowOtherSettings, rowDeviceInfo}) {
+            action.setEnabled(!busy);
         }
         if (state.updatedRobot != null) {
             setResult(RESULT_OK, new Intent().putExtra(EXTRA_ROBOT_ID, state.updatedRobot.getId())
@@ -171,6 +180,7 @@ public class RobotSettingsActivity extends AppCompatActivity {
         } else {
             dismissRenameDialog();
         }
+        renderUnpairDialog(state);
         if (state.message != null) {
             viewModel.acknowledgeFeedback();
             Toast.makeText(this, state.message, Toast.LENGTH_LONG).show();
@@ -190,6 +200,7 @@ public class RobotSettingsActivity extends AppCompatActivity {
         if (navigatingToLogin) return;
         navigatingToLogin = true;
         dismissRenameDialog();
+        dismissUnpairDialog();
         if (message != null) Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         startActivity(new Intent(this, LoginActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
@@ -198,17 +209,53 @@ public class RobotSettingsActivity extends AppCompatActivity {
 
     @Override protected void onDestroy() {
         dismissRenameDialog();
+        dismissUnpairDialog();
         super.onDestroy();
     }
 
-    private void showDeleteConfirmDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.setting_delete_device)
-                .setMessage("Bạn có chắc chắn muốn xóa thiết bị này không?")
-                .setPositiveButton("Xóa", (dialog, which) -> {
-                    Toast.makeText(this, "Đã yêu cầu xóa thiết bị", Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Hủy", null)
-                .show();
+    private void renderUnpairDialog(RobotSettingsUiState state) {
+        if (!state.unpairDialogOpen) {
+            dismissUnpairDialog();
+            return;
+        }
+        if (unpairDialog == null) createUnpairDialog();
+        String confirmation = getString(R.string.unpair_robot_confirmation, state.robotName, state.robotId);
+        unpairDialog.setMessage(state.unpairError == null ? confirmation : confirmation + "\n\n" + state.unpairError);
+        unpairDialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(state.isUnpairing
+                ? R.string.unpairing_robot : R.string.action_unpair_robot);
+        unpairDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(!state.isUnpairing && viewModel.hasValidRobotId());
+        unpairDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setEnabled(!state.isUnpairing);
+        unpairDialog.setCancelable(!state.isUnpairing);
+        unpairDialog.setCanceledOnTouchOutside(!state.isUnpairing);
+    }
+
+    private void createUnpairDialog() {
+        RobotSettingsUiState state = viewModel.getUiState().getValue();
+        unpairDialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.unpair_robot_title)
+                .setMessage(getString(R.string.unpair_robot_confirmation, state.robotName, state.robotId))
+                .setPositiveButton(R.string.action_unpair_robot, null)
+                .setNegativeButton(R.string.action_cancel, null)
+                .create();
+        unpairDialog.setOnCancelListener(dialog -> viewModel.closeUnpairDialog());
+        unpairDialog.show();
+        unpairDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> viewModel.confirmUnpair());
+        unpairDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener(v -> viewModel.closeUnpairDialog());
+    }
+
+    private void dismissUnpairDialog() {
+        if (unpairDialog == null) return;
+        unpairDialog.setOnCancelListener(null);
+        unpairDialog.dismiss();
+        unpairDialog = null;
+    }
+
+    private void finishWithUnpairing(String id) {
+        if (finishingAfterUnpair) return;
+        finishingAfterUnpair = true;
+        dismissRenameDialog();
+        dismissUnpairDialog();
+        setResult(RESULT_OK, new Intent().putExtra(EXTRA_ROBOT_ID, id).putExtra(EXTRA_ROBOT_UNPAIRED, true));
+        finish();
     }
 }

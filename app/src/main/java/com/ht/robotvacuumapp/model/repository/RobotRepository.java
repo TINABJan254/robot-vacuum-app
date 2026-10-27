@@ -28,7 +28,7 @@ import retrofit2.Response;
 
 /** Backend robot data and requests owned by one screen's ViewModel. */
 public class RobotRepository {
-    private enum Operation { PAIR, READ, RENAME }
+    private enum Operation { PAIR, READ, RENAME, UNPAIR }
     private final Supplier<RobotApiService> services;
     private final Supplier<String> authorization;
     private final Set<Call<?>> requests = ConcurrentHashMap.newKeySet();
@@ -68,6 +68,18 @@ public class RobotRepository {
 
     public void getRobots(Callback<List<RobotDevice>> callback) {
         loadPage(0, generation.get(), new LinkedHashMap<>(), callback);
+    }
+
+    public void unpairRobot(long id, Callback<RobotDevice> callback) {
+        String header = requireAuthorization(callback);
+        if (header == null) return;
+        enqueue(services.get().unpairRobot(header, id), generation.get(), Operation.UNPAIR, callback, response -> {
+            if (!validRobot(response) || response.getId() != id || !response.isUnpaired()) {
+                invalidResponse(callback);
+                return;
+            }
+            callback.onSuccess(toDevice(response));
+        });
     }
 
     public void renameRobot(long id, String name, Callback<RobotDevice> callback) {
@@ -188,6 +200,7 @@ public class RobotRepository {
                 break;
             case 409:
                 message = operation == Operation.PAIR ? "Robot đã thuộc một tài khoản khác."
+                        : operation == Operation.UNPAIR ? "Chưa thể gỡ robot khỏi tài khoản do xung đột dữ liệu. Vui lòng thử lại."
                         : "Không thể cập nhật robot do xung đột dữ liệu. Vui lòng thử lại.";
                 break;
             default: message = "Máy chủ gặp lỗi (HTTP " + status + "). Vui lòng thử lại.";

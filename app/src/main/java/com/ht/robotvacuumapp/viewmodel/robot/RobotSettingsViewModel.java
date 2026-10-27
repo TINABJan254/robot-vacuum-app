@@ -43,7 +43,8 @@ public class RobotSettingsViewModel extends ViewModel {
 
     public void openRenameDialog() {
         RobotSettingsUiState s = state.getValue();
-        if (cleared || id == null || s.requiresLogin || s.isSaving || s.dialogOpen) return;
+        if (cleared || id == null || s.requiresLogin || s.isSaving || s.dialogOpen
+                || s.unpairDialogOpen || s.isUnpairing || s.unpairedRobotId != null) return;
         RobotSettingsUiState.Builder b = s.toBuilder();
         b.dialogOpen = true;
         b.draftName = s.robotName;
@@ -54,7 +55,7 @@ public class RobotSettingsViewModel extends ViewModel {
 
     public void updateDraft(String name) {
         RobotSettingsUiState s = state.getValue();
-        if (!s.dialogOpen || s.isSaving || s.draftName.equals(name)) return;
+        if (cleared || s.unpairedRobotId != null || !s.dialogOpen || s.isSaving || s.isUnpairing || s.draftName.equals(name)) return;
         RobotSettingsUiState.Builder b = s.toBuilder();
         b.draftName = name;
         b.nameError = null;
@@ -64,7 +65,7 @@ public class RobotSettingsViewModel extends ViewModel {
 
     public void closeRenameDialog() {
         RobotSettingsUiState s = state.getValue();
-        if (s.isSaving) return;
+        if (cleared || s.unpairedRobotId != null || s.isSaving || s.isUnpairing) return;
         RobotSettingsUiState.Builder b = s.toBuilder();
         b.dialogOpen = false;
         b.draftName = s.robotName;
@@ -75,7 +76,8 @@ public class RobotSettingsViewModel extends ViewModel {
 
     public void saveName() {
         RobotSettingsUiState s = state.getValue();
-        if (cleared || id == null || s.requiresLogin || !s.dialogOpen || s.isSaving) return;
+        if (cleared || id == null || s.requiresLogin || !s.dialogOpen || s.isSaving
+                || s.unpairDialogOpen || s.isUnpairing || s.unpairedRobotId != null) return;
         String name = s.draftName.trim();
         RobotSettingsUiState.Builder b = s.toBuilder();
         b.nameError = name.isEmpty() ? "Vui lòng nhập tên robot."
@@ -109,14 +111,7 @@ public class RobotSettingsViewModel extends ViewModel {
             @Override public void onError(int status, String message, Map<String, String> fields) {
                 if (!isCurrent(current)) return;
                 if (status == 401) {
-                    ++operation;
-                    robots.cancelPendingRequests();
-                    auth.cancelPendingRequests();
-                    auth.logout();
-                    RobotSettingsUiState.Builder expired = new RobotSettingsUiState.Builder();
-                    expired.requiresLogin = true;
-                    expired.message = message;
-                    state.setValue(expired.build());
+                    expireSession(message);
                     return;
                 }
                 RobotSettingsUiState.Builder next = state.getValue().toBuilder();
@@ -135,7 +130,75 @@ public class RobotSettingsViewModel extends ViewModel {
     }
 
     private boolean isCurrent(int current) {
-        return !cleared && current == operation && !state.getValue().requiresLogin;
+        return !cleared && current == operation && !state.getValue().requiresLogin
+                && state.getValue().unpairedRobotId == null;
+    }
+
+    public void openUnpairDialog() {
+        RobotSettingsUiState s = state.getValue();
+        if (cleared || id == null || s.requiresLogin || s.dialogOpen || s.isSaving
+                || s.isUnpairing || s.unpairDialogOpen || s.unpairedRobotId != null) return;
+        RobotSettingsUiState.Builder b = s.toBuilder();
+        b.unpairDialogOpen = true;
+        b.unpairError = null;
+        state.setValue(b.build());
+    }
+
+    public void closeUnpairDialog() {
+        RobotSettingsUiState s = state.getValue();
+        if (cleared || s.isUnpairing || s.unpairedRobotId != null) return;
+        RobotSettingsUiState.Builder b = s.toBuilder();
+        b.unpairDialogOpen = false;
+        b.unpairError = null;
+        state.setValue(b.build());
+    }
+
+    public void confirmUnpair() {
+        RobotSettingsUiState s = state.getValue();
+        if (cleared || id == null || s.requiresLogin || !s.unpairDialogOpen || s.isUnpairing
+                || s.dialogOpen || s.isSaving || s.unpairedRobotId != null) return;
+        int current = ++operation;
+        RobotSettingsUiState.Builder b = s.toBuilder();
+        b.isUnpairing = true;
+        b.unpairError = null;
+        b.message = null;
+        state.setValue(b.build());
+        robots.unpairRobot(id, new RobotRepository.Callback<RobotDevice>() {
+            @Override public void onSuccess(RobotDevice result) {
+                if (!isCurrent(current)) return;
+                RobotSettingsUiState.Builder next = state.getValue().toBuilder();
+                next.isUnpairing = false;
+                next.unpairDialogOpen = false;
+                next.unpairError = null;
+                next.unpairedRobotId = result.getId();
+                next.updatedRobot = null;
+                next.draftName = "";
+                next.message = null;
+                state.setValue(next.build());
+            }
+            @Override public void onError(int status, String message, Map<String, String> fields) {
+                if (!isCurrent(current)) return;
+                if (status == 401) {
+                    expireSession(message);
+                    return;
+                }
+                RobotSettingsUiState.Builder next = state.getValue().toBuilder();
+                next.isUnpairing = false;
+                next.unpairError = message;
+                state.setValue(next.build());
+            }
+        });
+    }
+
+    private void expireSession(String message) {
+        ++operation;
+        robots.cancelPendingRequests();
+        auth.cancelPendingRequests();
+        auth.logout();
+        RobotSettingsUiState.Builder expired = new RobotSettingsUiState.Builder();
+        expired.requiresLogin = true;
+        expired.message = message;
+        state.setValue(expired.build());
     }
 
     @Override protected void onCleared() {

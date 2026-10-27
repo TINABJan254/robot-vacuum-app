@@ -48,8 +48,12 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
     private final ActivityResultLauncher<Intent> controlLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    viewModel.onRobotRenamed(result.getData().getStringExtra(RobotControlActivity.EXTRA_ROBOT_ID),
-                            result.getData().getStringExtra(RobotControlActivity.EXTRA_ROBOT_NAME));
+                    String id = result.getData().getStringExtra(RobotControlActivity.EXTRA_ROBOT_ID);
+                    if (result.getData().getBooleanExtra(RobotControlActivity.EXTRA_ROBOT_UNPAIRED, false)) {
+                        viewModel.onRobotUnpaired(id);
+                    } else {
+                        viewModel.onRobotRenamed(id, result.getData().getStringExtra(RobotControlActivity.EXTRA_ROBOT_NAME));
+                    }
                 }
             });
 

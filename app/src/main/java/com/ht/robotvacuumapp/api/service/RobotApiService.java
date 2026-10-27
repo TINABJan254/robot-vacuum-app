@@ -14,6 +14,9 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface RobotApiService {
+    @POST("api/v1/robots/{id}/unpair")
+    Call<RobotResponse> unpairRobot(@Header("Authorization") String authorization, @Path("id") long id);
+
     @PUT("api/v1/robots/{id}")
     Call<RobotResponse> renameRobot(@Header("Authorization") String authorization,
                                    @Path("id") long id, @Body UpdateRobotNameRequest request);

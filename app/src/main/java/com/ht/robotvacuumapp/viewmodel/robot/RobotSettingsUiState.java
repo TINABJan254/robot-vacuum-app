@@ -14,6 +14,10 @@ public final class RobotSettingsUiState {
     public final RobotDevice updatedRobot;
     public final boolean requiresLogin;
     public final String message;
+    public final boolean unpairDialogOpen;
+    public final boolean isUnpairing;
+    public final String unpairError;
+    public final String unpairedRobotId;
 
     private RobotSettingsUiState(Builder b) {
         robotId = b.robotId;
@@ -26,6 +30,10 @@ public final class RobotSettingsUiState {
         updatedRobot = b.updatedRobot;
         requiresLogin = b.requiresLogin;
         message = b.message;
+        unpairDialogOpen = b.unpairDialogOpen;
+        isUnpairing = b.isUnpairing;
+        unpairError = b.unpairError;
+        unpairedRobotId = b.unpairedRobotId;
     }
 
     Builder toBuilder() { return new Builder(this); }
@@ -41,6 +49,10 @@ public final class RobotSettingsUiState {
         RobotDevice updatedRobot;
         boolean requiresLogin;
         String message;
+        boolean unpairDialogOpen;
+        boolean isUnpairing;
+        String unpairError;
+        String unpairedRobotId;
 
         Builder() { }
         Builder(RobotSettingsUiState s) {
@@ -54,6 +66,10 @@ public final class RobotSettingsUiState {
             updatedRobot = s.updatedRobot;
             requiresLogin = s.requiresLogin;
             message = s.message;
+            unpairDialogOpen = s.unpairDialogOpen;
+            isUnpairing = s.isUnpairing;
+            unpairError = s.unpairError;
+            unpairedRobotId = s.unpairedRobotId;
         }
         RobotSettingsUiState build() { return new RobotSettingsUiState(this); }
     }

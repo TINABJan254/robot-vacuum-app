@@ -9,11 +9,13 @@ public final class RobotControlUiState {
     public final String message;
     public final String robotId;
     public final boolean nameUpdated;
+    public final boolean robotUnpaired;
 
     public RobotControlUiState(String robotId, String robotName, int batteryPercent, boolean autoMode,
-                               Status status, String message, boolean nameUpdated) {
+                               Status status, String message, boolean nameUpdated, boolean robotUnpaired) {
         this.robotId = robotId;
         this.nameUpdated = nameUpdated;
+        this.robotUnpaired = robotUnpaired;
         this.robotName = robotName;
         this.batteryPercent = batteryPercent;
         this.autoMode = autoMode;

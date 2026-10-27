@@ -7,9 +7,11 @@ import com.ht.robotvacuumapp.model.entity.RobotDevice;
 import com.ht.robotvacuumapp.model.repository.AuthRepository;
 import com.ht.robotvacuumapp.model.repository.RobotRepository;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class MainViewModel extends ViewModel {
     private final AuthRepository auth;
@@ -17,6 +19,7 @@ public class MainViewModel extends ViewModel {
     private final MutableLiveData<MainUiState> state;
     private int operation;
     private boolean cleared;
+    private final Set<String> handledUnpairs = new HashSet<>();
 
     public MainViewModel(AuthRepository auth, RobotRepository robots) {
         this.auth = auth;
@@ -43,6 +46,8 @@ public class MainViewModel extends ViewModel {
         robots.getRobots(new RobotRepository.Callback<List<RobotDevice>>() {
             @Override public void onSuccess(List<RobotDevice> result) {
                 if (!isCurrent(current)) return;
+                // Trust a fresh backend snapshot (including all robots visible to ADMIN).
+                for (RobotDevice robot : result) handledUnpairs.remove(robot.getId());
                 MainUiState.Builder b = state.getValue().toBuilder();
                 b.robots = result;
                 b.robotsLoaded = true;
@@ -134,6 +139,7 @@ public class MainViewModel extends ViewModel {
         robots.pairRobot(id, s.draftPairCode, new RobotRepository.Callback<RobotDevice>() {
             @Override public void onSuccess(RobotDevice result) {
                 if (!isCurrent(current)) return;
+                handledUnpairs.remove(result.getId());
                 MainUiState.Builder next = state.getValue().toBuilder();
                 Map<String, RobotDevice> unique = new LinkedHashMap<>();
                 for (RobotDevice device : next.robots) unique.put(device.getId(), device);
@@ -168,7 +174,7 @@ public class MainViewModel extends ViewModel {
     }
 
     public void selectRobot(RobotDevice robot) {
-        if (state.getValue().requiresLogin) return;
+        if (state.getValue().requiresLogin || handledUnpairs.contains(robot.getId())) return;
         MainUiState.Builder b = state.getValue().toBuilder();
         b.selectedRobotId = robot.getId();
         b.robotToOpen = robot;
@@ -179,7 +185,7 @@ public class MainViewModel extends ViewModel {
 
     public void onRobotRenamed(String id, String name) {
         MainUiState s = state.getValue();
-        if (cleared || s.requiresLogin || s.isPairing || id == null || name == null
+        if (cleared || s.requiresLogin || s.isPairing || id == null || handledUnpairs.contains(id) || name == null
                 || name.trim().isEmpty() || name.length() > 255) return;
         // A GET started before opening Settings must not overwrite the confirmed name.
         ++operation;
@@ -199,6 +205,32 @@ public class MainViewModel extends ViewModel {
         b.robots = updated;
         state.setValue(b.build());
         if (!found) loadRobots();
+    }
+
+    public void onRobotUnpaired(String id) {
+        MainUiState s = state.getValue();
+        if (cleared || s.requiresLogin || s.isPairing || id == null || !id.matches("[1-9][0-9]*")
+                || handledUnpairs.contains(id)) return;
+        try {
+            Long.parseLong(id);
+        } catch (NumberFormatException error) {
+            return;
+        }
+        handledUnpairs.add(id);
+        ++operation;
+        if (s.isLoadingRobots) robots.cancelPendingRequests();
+        MainUiState.Builder b = s.toBuilder();
+        b.isLoadingRobots = false;
+        List<RobotDevice> remaining = new ArrayList<>();
+        for (RobotDevice robot : s.robots) {
+            if (!robot.getId().equals(id)) remaining.add(robot);
+        }
+        b.robots = remaining;
+        if (id.equals(s.selectedRobotId)) b.selectedRobotId = null;
+        if (s.robotToOpen != null && id.equals(s.robotToOpen.getId())) b.robotToOpen = null;
+        b.message = "Đã gỡ robot khỏi tài khoản.";
+        state.setValue(b.build());
+        if (!s.robotsLoaded) loadRobots();
     }
 
     private void expireSession(String message) {
