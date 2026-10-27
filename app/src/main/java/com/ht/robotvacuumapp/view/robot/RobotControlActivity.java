@@ -21,6 +21,7 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import com.ht.robotvacuumapp.R;
 import com.ht.robotvacuumapp.model.entity.RobotTelemetry;
+import com.ht.robotvacuumapp.model.entity.RobotCommand;
 import com.ht.robotvacuumapp.model.repository.AuthRepository;
 import com.ht.robotvacuumapp.model.repository.RobotRepository;
 import com.ht.robotvacuumapp.view.auth.LoginActivity;
@@ -48,7 +49,6 @@ public class RobotControlActivity extends AppCompatActivity {
     private ImageView btnDpadLeft;
     private ImageView btnDpadRight;
     private FrameLayout btnDpadCenter;
-    private ImageView btnPlus;
 
     // Bottom Action Bar
     private TextView btnToggleMode;
@@ -90,6 +90,7 @@ public class RobotControlActivity extends AppCompatActivity {
                         getIntent().getStringExtra(EXTRA_ROBOT_ID),
                         getIntent().getStringExtra(EXTRA_ROBOT_NAME),
                         new RobotRepository(getApplicationContext()),
+                        new RobotRepository(getApplicationContext()),
                         new AuthRepository(getApplicationContext())));
             }
         }).get(RobotControlViewModel.class);
@@ -114,7 +115,6 @@ public class RobotControlActivity extends AppCompatActivity {
         btnDpadLeft = findViewById(R.id.btn_dpad_left);
         btnDpadRight = findViewById(R.id.btn_dpad_right);
         btnDpadCenter = findViewById(R.id.btn_dpad_center);
-        btnPlus = findViewById(R.id.btn_plus);
 
         btnToggleMode = findViewById(R.id.btn_toggle_mode);
         btnPlayPause = findViewById(R.id.btn_play_pause);
@@ -133,11 +133,11 @@ public class RobotControlActivity extends AppCompatActivity {
     }
 
     private void setupModeToggle() {
-        btnToggleMode.setOnClickListener(v -> viewModel.showControlUnavailable());
+        btnToggleMode.setOnClickListener(v -> viewModel.toggleMode());
     }
 
     private void setupPlayPauseToggle() {
-        btnPlayPause.setOnClickListener(v -> viewModel.showControlUnavailable());
+        btnPlayPause.setOnClickListener(v -> viewModel.toggleWorking());
     }
 
     private void render(RobotControlUiState state) {
@@ -165,20 +165,49 @@ public class RobotControlActivity extends AppCompatActivity {
         }
         tvRobotTitle.setText(state.robotName);
         renderTelemetry(state);
-        if (state.message != null) {
+        renderCommandControls(state);
+        if (state.publishedCommand != null) {
+            viewModel.acknowledgeFeedback();
+            Toast.makeText(this, commandFeedback(state.publishedCommand), Toast.LENGTH_SHORT).show();
+        } else if (state.message != null) {
             viewModel.acknowledgeFeedback();
             Toast.makeText(this, state.message, Toast.LENGTH_SHORT).show();
         }
     }
 
     private void setupDpadControls() {
-        for (View control : new View[]{btnDpadUp, btnDpadDown, btnDpadLeft, btnDpadRight, btnDpadCenter, btnPlus}) {
-            control.setOnClickListener(v -> viewModel.showControlUnavailable());
-        }
+        btnDpadUp.setOnClickListener(v -> viewModel.move(RobotCommand.Direction.FORWARD));
+        btnDpadDown.setOnClickListener(v -> viewModel.move(RobotCommand.Direction.BACKWARD));
+        btnDpadLeft.setOnClickListener(v -> viewModel.move(RobotCommand.Direction.LEFT));
+        btnDpadRight.setOnClickListener(v -> viewModel.move(RobotCommand.Direction.RIGHT));
+        btnDpadCenter.setOnClickListener(v -> viewModel.stopMovement());
     }
 
     private void setupChargeAction() {
-        btnCharge.setOnClickListener(v -> viewModel.showControlUnavailable());
+        btnCharge.setOnClickListener(v -> viewModel.returnToDock());
+    }
+
+    private void renderCommandControls(RobotControlUiState state) {
+        boolean enabled = state.robotId != null && !state.requiresLogin && !state.robotUnpaired && !state.isSendingCommand;
+        for (View control : new View[]{btnDpadUp, btnDpadDown, btnDpadLeft, btnDpadRight,
+                btnDpadCenter, btnPlayPause, btnCharge, btnToggleMode}) {
+            boolean canUse = enabled && (control != btnToggleMode
+                    || (state.telemetry != null && state.telemetry.mode != null));
+            control.setEnabled(canUse);
+            control.setAlpha(canUse ? 1f : 0.45f);
+            ViewCompat.setStateDescription(control, state.isSendingCommand ? getString(R.string.command_sending) : null);
+        }
+    }
+
+    private int commandFeedback(RobotCommand.Action action) {
+        switch (action) {
+            case START: return R.string.command_sent_start;
+            case STOP: return R.string.command_sent_stop;
+            case SET_MODE: return R.string.command_sent_mode;
+            case MOVE: return R.string.command_sent_move;
+            case STOP_MOVEMENT: return R.string.command_sent_stop_movement;
+            default: return R.string.command_sent_dock;
+        }
     }
 
     private void renderTelemetry(RobotControlUiState state) {

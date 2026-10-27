@@ -97,4 +97,20 @@
     <string name="telemetry_status_error">Có lỗi</string>
     <string name="telemetry_action_pause">Tạm dừng</string>
     <string name="telemetry_action_start">Bắt đầu</string>
+    <!-- Command publication feedback; execution is still reported by telemetry. -->
+    <string name="command_sending">Đang gửi lệnh…</string>
+    <string name="command_sent_start">Đã gửi yêu cầu bắt đầu dọn dẹp</string>
+    <string name="command_sent_stop">Đã gửi yêu cầu dừng dọn dẹp</string>
+    <string name="command_sent_mode">Đã gửi yêu cầu đổi chế độ</string>
+    <string name="command_sent_move">Đã gửi yêu cầu di chuyển</string>
+    <string name="command_sent_stop_movement">Đã gửi yêu cầu dừng di chuyển</string>
+    <string name="command_sent_dock">Đã gửi yêu cầu về trạm</string>
+    <string name="command_forward">Tiến lên</string>
+    <string name="command_backward">Lùi lại</string>
+    <string name="command_left">Rẽ trái</string>
+    <string name="command_right">Rẽ phải</string>
+    <string name="command_stop_movement">Dừng bánh xe</string>
+    <string name="command_toggle_mode">Chuyển chế độ Auto/Manual</string>
+    <string name="command_dock">Sạc</string>
+    <string name="command_return_to_dock">Về trạm sạc</string>
 </resources>

@@ -7,6 +7,9 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import com.ht.robotvacuumapp.model.repository.AuthRepository;
 import com.ht.robotvacuumapp.model.repository.RobotRepository;
+import com.ht.robotvacuumapp.model.entity.RobotCommand;
+import com.ht.robotvacuumapp.api.dto.RobotCommandResponse;
+import com.ht.robotvacuumapp.model.entity.RobotTelemetry;
 import java.util.Map;
 
 public class RobotControlViewModel extends ViewModel {
@@ -24,6 +27,7 @@ public class RobotControlViewModel extends ViewModel {
     }
 
     private final RobotRepository robots;
+    private final RobotRepository commands;
     private final AuthRepository auth;
     private final Scheduler scheduler;
     private final Long id;
@@ -33,14 +37,18 @@ public class RobotControlViewModel extends ViewModel {
     private boolean pollingAllowed;
     private boolean cleared;
     private long operation;
+    private long commandOperation;
 
-    public RobotControlViewModel(String robotId, String name, RobotRepository robots, AuthRepository auth) {
-        this(robotId, name, robots, auth, new MainScheduler());
+    public RobotControlViewModel(String robotId, String name, RobotRepository robots,
+                                 RobotRepository commands, AuthRepository auth) {
+        this(robotId, name, robots, commands, auth, new MainScheduler());
     }
 
     public RobotControlViewModel(String robotId, String name, RobotRepository robots,
-                                 AuthRepository auth, Scheduler scheduler) {
+                                 RobotRepository commands, AuthRepository auth, Scheduler scheduler) {
         this.robots = robots;
+        if (robots == commands) throw new IllegalArgumentException("Telemetry and commands must own separate requests");
+        this.commands = commands;
         this.auth = auth;
         this.scheduler = scheduler;
         id = parseId(robotId);
@@ -144,6 +152,7 @@ public class RobotControlViewModel extends ViewModel {
 
     private void expireSession(String message) {
         cancelPolling();
+        cancelCommands();
         auth.cancelPendingRequests();
         auth.logout();
         RobotControlUiState.Builder b = state.getValue().toBuilder();
@@ -151,21 +160,85 @@ public class RobotControlViewModel extends ViewModel {
         b.isLoading = false;
         b.telemetryError = null;
         b.requiresLogin = true;
+        clearCommandState(b);
         b.message = message;
         state.setValue(b.build());
     }
 
-    public void showControlUnavailable() {
-        RobotControlUiState s = state.getValue();
-        if (cleared || s.robotUnpaired || s.requiresLogin) return;
-        RobotControlUiState.Builder b = s.toBuilder();
-        b.message = "Chức năng gửi lệnh điều khiển chưa được tích hợp.";
+    public void toggleWorking() {
+        RobotTelemetry t = state.getValue().telemetry;
+        sendCommand(t != null && t.status == RobotTelemetry.Status.WORKING
+                ? RobotCommand.stop() : RobotCommand.start(t == null ? null : t.mode));
+    }
+
+    public void toggleMode() {
+        RobotTelemetry t = state.getValue().telemetry;
+        if (t == null || t.mode == null) return;
+        sendCommand(RobotCommand.setMode(t.mode == RobotTelemetry.Mode.AUTO
+                ? RobotTelemetry.Mode.MANUAL : RobotTelemetry.Mode.AUTO));
+    }
+
+    public void move(RobotCommand.Direction direction) {
+        if (direction != null) sendCommand(RobotCommand.move(direction));
+    }
+
+    public void stopMovement() { sendCommand(RobotCommand.stopMovement()); }
+    public void returnToDock() { sendCommand(RobotCommand.returnToDock()); }
+
+    private void sendCommand(RobotCommand command) {
+        if (!active || !canRead() || state.getValue().isSendingCommand) return;
+        long current = ++commandOperation;
+        RobotControlUiState.Builder b = state.getValue().toBuilder();
+        b.isSendingCommand = true;
+        b.pendingCommand = command;
+        b.publishedCommand = null;
+        b.message = null;
         state.setValue(b.build());
+        commands.sendCommand(id, command, new RobotRepository.Callback<RobotCommandResponse>() {
+            @Override public void onSuccess(RobotCommandResponse response) {
+                if (!isCurrentCommand(current)) return;
+                RobotControlUiState.Builder next = state.getValue().toBuilder();
+                next.isSendingCommand = false;
+                next.pendingCommand = null;
+                next.publishedCommand = response.getAction();
+                state.setValue(next.build());
+            }
+            @Override public void onError(int status, String message, Map<String, String> fields) {
+                if (!isCurrentCommand(current)) return;
+                if (status == 401) {
+                    expireSession(message);
+                    return;
+                }
+                RobotControlUiState.Builder next = state.getValue().toBuilder();
+                next.isSendingCommand = false;
+                next.pendingCommand = null;
+                next.publishedCommand = null;
+                next.message = message;
+                state.setValue(next.build());
+            }
+        });
+    }
+
+    private boolean isCurrentCommand(long current) {
+        // A request survives onStop/recreation; a cleared, expired or unpaired screen does not.
+        return canRead() && current == commandOperation && state.getValue().isSendingCommand;
+    }
+
+    private void cancelCommands() {
+        ++commandOperation;
+        commands.cancelPendingRequests();
+    }
+
+    private void clearCommandState(RobotControlUiState.Builder b) {
+        b.isSendingCommand = false;
+        b.pendingCommand = null;
+        b.publishedCommand = null;
     }
 
     public void acknowledgeFeedback() {
         RobotControlUiState.Builder b = state.getValue().toBuilder();
         b.message = null;
+        b.publishedCommand = null;
         state.setValue(b.build());
     }
 
@@ -183,6 +256,7 @@ public class RobotControlViewModel extends ViewModel {
         RobotControlUiState s = state.getValue();
         if (cleared || s.requiresLogin || s.robotUnpaired || s.robotId == null || !s.robotId.equals(robotId)) return;
         cancelPolling();
+        cancelCommands();
         RobotControlUiState.Builder b = s.toBuilder();
         b.robotUnpaired = true;
         b.nameUpdated = false;
@@ -190,12 +264,14 @@ public class RobotControlViewModel extends ViewModel {
         b.telemetry = null;
         b.telemetryError = null;
         b.message = null;
+        clearCommandState(b);
         state.setValue(b.build());
     }
 
     @Override protected void onCleared() {
         cleared = true;
         cancelPolling();
+        cancelCommands();
         auth.cancelPendingRequests();
     }
 }

@@ -9,9 +9,12 @@ import com.ht.robotvacuumapp.api.dto.PairRobotRequest;
 import com.ht.robotvacuumapp.api.dto.RobotPageResponse;
 import com.ht.robotvacuumapp.api.dto.RobotResponse;
 import com.ht.robotvacuumapp.api.dto.UpdateRobotNameRequest;
+import com.ht.robotvacuumapp.api.dto.RobotCommandRequest;
 import com.ht.robotvacuumapp.api.service.RobotApiService;
 import com.ht.robotvacuumapp.model.entity.RobotDevice;
 import com.ht.robotvacuumapp.model.entity.RobotTelemetry;
+import com.ht.robotvacuumapp.model.entity.RobotCommand;
+import com.ht.robotvacuumapp.api.dto.RobotCommandResponse;
 import com.ht.robotvacuumapp.model.local.TokenManager;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,7 +32,7 @@ import retrofit2.Response;
 
 /** Backend robot data and requests owned by one screen's ViewModel. */
 public class RobotRepository {
-    private enum Operation { PAIR, READ, RENAME, UNPAIR, TELEMETRY }
+    private enum Operation { PAIR, READ, RENAME, UNPAIR, TELEMETRY, COMMAND }
     private final Supplier<RobotApiService> services;
     private final Supplier<String> authorization;
     private final Set<Call<?>> requests = ConcurrentHashMap.newKeySet();
@@ -63,6 +66,20 @@ public class RobotRepository {
             if (snapshot == null) invalidTelemetry(callback);
             else callback.onSuccess(TelemetryResult.data(snapshot));
         }, () -> callback.onSuccess(TelemetryResult.noData()));
+    }
+
+    public void sendCommand(long id, RobotCommand command, Callback<RobotCommandResponse> callback) {
+        if (id <= 0 || command == null) {
+            callback.onError(400, "Lệnh điều khiển hoặc ID robot không hợp lệ.", Collections.emptyMap());
+            return;
+        }
+        String header = requireAuthorization(callback);
+        if (header == null) return;
+        enqueue(services.get().sendCommand(header, id, new RobotCommandRequest(command)), generation.get(),
+                Operation.COMMAND, callback, response -> {
+                    if (!response.isValidFor(id, command)) invalidCommand(callback);
+                    else callback.onSuccess(response);
+                });
     }
 
     public RobotRepository(Context context) {
@@ -184,10 +201,11 @@ public class RobotRepository {
                 if (call.isCanceled() || current != generation.get()) return;
                 if (response.code() == 204 && noContent != null) {
                     noContent.run();
-                } else if (response.code() == 200 && response.body() != null) {
+                } else if (response.code() == (operation == Operation.COMMAND ? 202 : 200) && response.body() != null) {
                     success.accept(response.body());
                 } else if (response.isSuccessful()) {
-                    if (operation == Operation.TELEMETRY) invalidTelemetry(callback);
+                    if (operation == Operation.COMMAND) invalidCommand(callback);
+                    else if (operation == Operation.TELEMETRY) invalidTelemetry(callback);
                     else invalidResponse(callback);
                 } else {
                     readError(response.code(), response.errorBody(), operation, callback);
@@ -196,7 +214,9 @@ public class RobotRepository {
             @Override public void onFailure(Call<T> call, Throwable error) {
                 requests.remove(call);
                 if (call.isCanceled() || current != generation.get()) return;
-                callback.onError(0, operation == Operation.TELEMETRY
+                callback.onError(0, operation == Operation.COMMAND
+                                ? "Chưa xác nhận được kết quả gửi lệnh. Vui lòng kiểm tra kết nối và trạng thái robot."
+                                : operation == Operation.TELEMETRY
                                 ? "Không tải được dữ liệu robot. Vui lòng kiểm tra kết nối và thử lại."
                                 : "Không thể xác nhận kết quả từ máy chủ. Kiểm tra kết nối rồi tải lại danh sách hoặc thử lại.",
                         Collections.emptyMap());
@@ -210,6 +230,10 @@ public class RobotRepository {
 
     private void invalidTelemetry(Callback<?> callback) {
         callback.onError(0, "Dữ liệu robot trả về không hợp lệ. Vui lòng thử lại.", Collections.emptyMap());
+    }
+
+    private void invalidCommand(Callback<?> callback) {
+        callback.onError(0, "Chưa xác nhận được kết quả gửi lệnh từ máy chủ.", Collections.emptyMap());
     }
 
     private void readError(int status, ResponseBody body, Operation operation, Callback<?> callback) {
@@ -240,7 +264,12 @@ public class RobotRepository {
             case 409:
                 message = operation == Operation.PAIR ? "Robot đã thuộc một tài khoản khác."
                         : operation == Operation.UNPAIR ? "Chưa thể gỡ robot khỏi tài khoản do xung đột dữ liệu. Vui lòng thử lại."
+                        : operation == Operation.COMMAND ? "Không thể gửi lệnh do xung đột dữ liệu. Vui lòng thử lại."
                         : "Không thể cập nhật robot do xung đột dữ liệu. Vui lòng thử lại.";
+                break;
+            case 503:
+                message = operation == Operation.COMMAND ? "Chưa gửi được lệnh tới robot. Vui lòng thử lại."
+                        : "Máy chủ gặp lỗi (HTTP 503). Vui lòng thử lại.";
                 break;
             default: message = "Máy chủ gặp lỗi (HTTP " + status + "). Vui lòng thử lại.";
         }

@@ -4,6 +4,8 @@ import com.ht.robotvacuumapp.api.dto.PairRobotRequest;
 import com.ht.robotvacuumapp.api.dto.RobotPageResponse;
 import com.ht.robotvacuumapp.api.dto.RobotResponse;
 import com.ht.robotvacuumapp.api.dto.RobotTelemetryResponse;
+import com.ht.robotvacuumapp.api.dto.RobotCommandRequest;
+import com.ht.robotvacuumapp.api.dto.RobotCommandResponse;
 import com.ht.robotvacuumapp.api.dto.UpdateRobotNameRequest;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -15,6 +17,10 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface RobotApiService {
+    @POST("api/v1/robots/{id}/commands")
+    Call<RobotCommandResponse> sendCommand(@Header("Authorization") String authorization,
+                                          @Path("id") long id, @Body RobotCommandRequest request);
+
     @GET("api/v1/robots/{id}/telemetry")
     Call<RobotTelemetryResponse> getTelemetry(@Header("Authorization") String authorization, @Path("id") long id);
 
