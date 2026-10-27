@@ -177,6 +177,30 @@ public class MainViewModel extends ViewModel {
 
     public void logout() { expireSession(null); }
 
+    public void onRobotRenamed(String id, String name) {
+        MainUiState s = state.getValue();
+        if (cleared || s.requiresLogin || s.isPairing || id == null || name == null
+                || name.trim().isEmpty() || name.length() > 255) return;
+        // A GET started before opening Settings must not overwrite the confirmed name.
+        ++operation;
+        if (s.isLoadingRobots) robots.cancelPendingRequests();
+        MainUiState.Builder b = s.toBuilder();
+        b.isLoadingRobots = false;
+        List<RobotDevice> updated = new ArrayList<>();
+        boolean found = false;
+        for (RobotDevice robot : s.robots) {
+            if (robot.getId().equals(id)) {
+                updated.add(robot.withName(name));
+                found = true;
+            } else {
+                updated.add(robot);
+            }
+        }
+        b.robots = updated;
+        state.setValue(b.build());
+        if (!found) loadRobots();
+    }
+
     private void expireSession(String message) {
         ++operation;
         robots.cancelPendingRequests();

@@ -11,6 +11,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -42,6 +44,14 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
     private TextView tvPairError, btnPair, btnCancel;
     private boolean syncingDraft;
     private boolean navigatingToLogin;
+
+    private final ActivityResultLauncher<Intent> controlLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    viewModel.onRobotRenamed(result.getData().getStringExtra(RobotControlActivity.EXTRA_ROBOT_ID),
+                            result.getData().getStringExtra(RobotControlActivity.EXTRA_ROBOT_NAME));
+                }
+            });
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -122,7 +132,8 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
         if (state.robotToOpen != null) {
             viewModel.acknowledgeFeedback();
             RobotDevice robot = state.robotToOpen;
-            startActivity(new Intent(this, RobotControlActivity.class)
+            controlLauncher.launch(new Intent(this, RobotControlActivity.class)
+                    .putExtra(RobotControlActivity.EXTRA_ROBOT_ID, robot.getId())
                     .putExtra(RobotControlActivity.EXTRA_ROBOT_NAME, robot.getName())
                     .putExtra(RobotControlActivity.EXTRA_ROBOT_BATTERY, robot.getBatteryPercentage())
                     .putExtra(RobotControlActivity.EXTRA_ROBOT_STATUS, robot.getStatus()));

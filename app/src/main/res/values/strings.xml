@@ -57,6 +57,7 @@
     <string name="dialog_edit_robot_name_title">Đổi tên robot</string>
     <string name="dialog_edit_robot_name_hint">Nhập tên mới</string>
     <string name="action_save">Lưu</string>
+    <string name="saving_robot_name">Đang lưu…</string>
 
     <!-- Schedule Cleaning Strings -->
     <string name="schedule_empty_hint">Kiểm tra lịch dọn dẹp của bạn.</string>

@@ -9,6 +9,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
@@ -24,6 +26,7 @@ import com.ht.robotvacuumapp.viewmodel.robot.RobotControlViewModel;
 public class RobotControlActivity extends AppCompatActivity {
 
     public static final String EXTRA_ROBOT_NAME = "extra_robot_name";
+    public static final String EXTRA_ROBOT_ID = "extra_robot_id";
     public static final String EXTRA_ROBOT_BATTERY = "extra_robot_battery";
     public static final String EXTRA_ROBOT_STATUS = "extra_robot_status";
 
@@ -49,6 +52,14 @@ public class RobotControlActivity extends AppCompatActivity {
 
     private RobotControlViewModel viewModel;
 
+    private final ActivityResultLauncher<Intent> settingsLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    viewModel.applyRenamedRobot(result.getData().getStringExtra(RobotSettingsActivity.EXTRA_ROBOT_ID),
+                            result.getData().getStringExtra(RobotSettingsActivity.EXTRA_ROBOT_NAME));
+                }
+            });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +76,7 @@ public class RobotControlActivity extends AppCompatActivity {
         viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
             @NonNull @Override public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
                 return modelClass.cast(new RobotControlViewModel(
+                        getIntent().getStringExtra(EXTRA_ROBOT_ID),
                         getIntent().getStringExtra(EXTRA_ROBOT_NAME),
                         getIntent().getIntExtra(EXTRA_ROBOT_BATTERY, 93)));
             }
@@ -101,8 +113,10 @@ public class RobotControlActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
         btnSettings.setOnClickListener(v -> {
             Intent intent = new Intent(RobotControlActivity.this, RobotSettingsActivity.class);
-            intent.putExtra(RobotSettingsActivity.EXTRA_ROBOT_NAME, tvRobotTitle.getText().toString());
-            startActivity(intent);
+            RobotControlUiState state = viewModel.getUiState().getValue();
+            intent.putExtra(RobotSettingsActivity.EXTRA_ROBOT_ID, state.robotId);
+            intent.putExtra(RobotSettingsActivity.EXTRA_ROBOT_NAME, state.robotName);
+            settingsLauncher.launch(intent);
         });
     }
 
@@ -115,6 +129,10 @@ public class RobotControlActivity extends AppCompatActivity {
     }
 
     private void render(RobotControlUiState state) {
+        if (state.nameUpdated) {
+            setResult(RESULT_OK, new Intent().putExtra(EXTRA_ROBOT_ID, state.robotId)
+                    .putExtra(EXTRA_ROBOT_NAME, state.robotName));
+        }
         tvRobotTitle.setText(state.robotName);
         tvBatteryPercent.setText(state.batteryPercent < 0 ? "-- %" : state.batteryPercent + " %");
         btnToggleMode.setText(state.autoMode ? "Auto" : "Manual");

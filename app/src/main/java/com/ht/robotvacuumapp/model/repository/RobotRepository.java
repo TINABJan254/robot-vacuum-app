@@ -8,6 +8,7 @@ import com.ht.robotvacuumapp.api.dto.FieldError;
 import com.ht.robotvacuumapp.api.dto.PairRobotRequest;
 import com.ht.robotvacuumapp.api.dto.RobotPageResponse;
 import com.ht.robotvacuumapp.api.dto.RobotResponse;
+import com.ht.robotvacuumapp.api.dto.UpdateRobotNameRequest;
 import com.ht.robotvacuumapp.api.service.RobotApiService;
 import com.ht.robotvacuumapp.model.entity.RobotDevice;
 import com.ht.robotvacuumapp.model.local.TokenManager;
@@ -27,6 +28,7 @@ import retrofit2.Response;
 
 /** Backend robot data and requests owned by one screen's ViewModel. */
 public class RobotRepository {
+    private enum Operation { PAIR, READ, RENAME }
     private final Supplier<RobotApiService> services;
     private final Supplier<String> authorization;
     private final Set<Call<?>> requests = ConcurrentHashMap.newKeySet();
@@ -54,7 +56,7 @@ public class RobotRepository {
         String header = requireAuthorization(callback);
         if (header == null) return;
         long current = generation.get();
-        enqueue(services.get().pairRobot(header, new PairRobotRequest(id, pairCode)), current, callback, response -> {
+        enqueue(services.get().pairRobot(header, new PairRobotRequest(id, pairCode)), current, Operation.PAIR, callback, response -> {
             if (!validRobot(response) || response.getId() != id
                     || response.getUserId() == null || response.getUserId() <= 0) {
                 invalidResponse(callback);
@@ -68,12 +70,25 @@ public class RobotRepository {
         loadPage(0, generation.get(), new LinkedHashMap<>(), callback);
     }
 
+    public void renameRobot(long id, String name, Callback<RobotDevice> callback) {
+        String header = requireAuthorization(callback);
+        if (header == null) return;
+        enqueue(services.get().renameRobot(header, id, new UpdateRobotNameRequest(name)), generation.get(),
+                Operation.RENAME, callback, response -> {
+                    if (!validRobot(response) || response.getId() != id || response.getName().length() > 255) {
+                        invalidResponse(callback);
+                        return;
+                    }
+                    callback.onSuccess(toDevice(response));
+                });
+    }
+
     private void loadPage(int page, long current, Map<Long, RobotDevice> collected,
                           Callback<List<RobotDevice>> callback) {
         if (current != generation.get()) return;
         String header = requireAuthorization(callback);
         if (header == null) return;
-        enqueue(services.get().getRobots(header, page, 100, "id,asc"), current, callback, response -> {
+        enqueue(services.get().getRobots(header, page, 100, "id,asc"), current, Operation.READ, callback, response -> {
             if (!validPage(response, page)) {
                 invalidResponse(callback);
                 return;
@@ -119,7 +134,7 @@ public class RobotRepository {
         return header;
     }
 
-    private <T> void enqueue(Call<T> request, long current, Callback<?> callback, Consumer<T> success) {
+    private <T> void enqueue(Call<T> request, long current, Operation operation, Callback<?> callback, Consumer<T> success) {
         requests.add(request);
         request.enqueue(new retrofit2.Callback<T>() {
             @Override public void onResponse(Call<T> call, Response<T> response) {
@@ -130,7 +145,7 @@ public class RobotRepository {
                 } else if (response.isSuccessful()) {
                     invalidResponse(callback);
                 } else {
-                    readError(response.code(), response.errorBody(), callback);
+                    readError(response.code(), response.errorBody(), operation, callback);
                 }
             }
             @Override public void onFailure(Call<T> call, Throwable error) {
@@ -146,7 +161,7 @@ public class RobotRepository {
         callback.onError(0, "Chưa xác nhận được kết quả từ máy chủ. Vui lòng tải lại danh sách hoặc thử lại.", Collections.emptyMap());
     }
 
-    private void readError(int status, ResponseBody body, Callback<?> callback) {
+    private void readError(int status, ResponseBody body, Operation operation, Callback<?> callback) {
         Map<String, String> fields = new LinkedHashMap<>();
         try (ResponseBody errorBody = body) {
             if (errorBody != null) {
@@ -167,8 +182,14 @@ public class RobotRepository {
             case 400: message = "Thông tin gửi lên không hợp lệ. Vui lòng kiểm tra lại."; break;
             case 401: message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."; break;
             case 403: message = "Bạn không có quyền thực hiện thao tác này."; break;
-            case 404: message = "ID robot hoặc mã ghép nối không chính xác."; break;
-            case 409: message = "Robot đã thuộc một tài khoản khác."; break;
+            case 404:
+                message = operation == Operation.PAIR ? "ID robot hoặc mã ghép nối không chính xác."
+                        : "Robot không tồn tại hoặc bạn không còn quyền truy cập.";
+                break;
+            case 409:
+                message = operation == Operation.PAIR ? "Robot đã thuộc một tài khoản khác."
+                        : "Không thể cập nhật robot do xung đột dữ liệu. Vui lòng thử lại.";
+                break;
             default: message = "Máy chủ gặp lỗi (HTTP " + status + "). Vui lòng thử lại.";
         }
         callback.onError(status, message, Collections.unmodifiableMap(fields));

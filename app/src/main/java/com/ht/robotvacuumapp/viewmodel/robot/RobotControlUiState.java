@@ -7,8 +7,13 @@ public final class RobotControlUiState {
     public final boolean autoMode;
     public final Status status;
     public final String message;
+    public final String robotId;
+    public final boolean nameUpdated;
 
-    public RobotControlUiState(String robotName, int batteryPercent, boolean autoMode, Status status, String message) {
+    public RobotControlUiState(String robotId, String robotName, int batteryPercent, boolean autoMode,
+                               Status status, String message, boolean nameUpdated) {
+        this.robotId = robotId;
+        this.nameUpdated = nameUpdated;
         this.robotName = robotName;
         this.batteryPercent = batteryPercent;
         this.autoMode = autoMode;

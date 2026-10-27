@@ -28,4 +28,8 @@ public final class RobotDevice {
     public String getStatus() { return status; }
     public int getBatteryPercentage() { return batteryPercentage; }
     public boolean isSquare() { return square; }
+
+    public RobotDevice withName(String newName) {
+        return new RobotDevice(id, newName, room, status, batteryPercentage, square);
+    }
 }
