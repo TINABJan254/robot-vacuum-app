@@ -107,9 +107,14 @@ public class RobotSettingsActivity extends AppCompatActivity {
                 Toast.makeText(this, "Cài đặt khác", Toast.LENGTH_SHORT).show()
         );
 
-        rowDeviceInfo.setOnClickListener(v ->
-                Toast.makeText(this, "Thông tin thiết bị", Toast.LENGTH_SHORT).show()
-        );
+        rowDeviceInfo.setOnClickListener(v -> {
+            Intent intent = new Intent(this, DeviceInfoActivity.class);
+            if (viewModel != null && viewModel.getUiState().getValue() != null) {
+                intent.putExtra(DeviceInfoActivity.EXTRA_DEVICE_NAME, viewModel.getUiState().getValue().robotName);
+                intent.putExtra(DeviceInfoActivity.EXTRA_DEVICE_ID, viewModel.getUiState().getValue().robotId);
+            }
+            startActivity(intent);
+        });
 
         btnUnpairDevice.setOnClickListener(v -> viewModel.openUnpairDialog());
     }

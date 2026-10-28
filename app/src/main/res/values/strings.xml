@@ -113,4 +113,13 @@
     <string name="command_toggle_mode">Chuyển chế độ Auto/Manual</string>
     <string name="command_dock">Sạc</string>
     <string name="command_return_to_dock">Về trạm sạc</string>
+
+    <!-- Device Info Strings -->
+    <string name="device_info_device_name">Tên thiết bị</string>
+    <string name="device_info_id">ID</string>
+    <string name="device_info_code">Mã</string>
+    <string name="device_info_serial">Số sê-ri</string>
+    <string name="device_info_history_service">Lịch sử linh kiện &amp; dịch vụ</string>
+    <string name="device_info_unknown">--</string>
+    <string name="device_info_loading">Đang tải thông tin thiết bị…</string>
 </resources>

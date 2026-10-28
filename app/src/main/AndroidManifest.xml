@@ -42,6 +42,9 @@
         <activity
             android:name=".view.robot.NewScheduleActivity"
             android:exported="false" />
+        <activity
+            android:name=".view.robot.DeviceInfoActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

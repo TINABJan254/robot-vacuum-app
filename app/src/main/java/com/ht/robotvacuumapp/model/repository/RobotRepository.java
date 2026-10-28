@@ -32,7 +32,7 @@ import retrofit2.Response;
 
 /** Backend robot data and requests owned by one screen's ViewModel. */
 public class RobotRepository {
-    private enum Operation { PAIR, READ, RENAME, UNPAIR, TELEMETRY, COMMAND }
+    private enum Operation { PAIR, READ, DETAIL, RENAME, UNPAIR, TELEMETRY, COMMAND }
     private final Supplier<RobotApiService> services;
     private final Supplier<String> authorization;
     private final Set<Call<?>> requests = ConcurrentHashMap.newKeySet();
@@ -110,6 +110,24 @@ public class RobotRepository {
 
     public void getRobots(Callback<List<RobotDevice>> callback) {
         loadPage(0, generation.get(), new LinkedHashMap<>(), callback);
+    }
+
+    public void getRobot(long id, Callback<RobotResponse> callback) {
+        if (id <= 0) {
+            callback.onError(400, "ID robot không hợp lệ.", Collections.emptyMap());
+            return;
+        }
+        String header = requireAuthorization(callback);
+        if (header == null) return;
+        enqueue(services.get().getRobot(header, id), generation.get(), Operation.DETAIL, callback, response -> {
+            if (!validRobot(response) || response.getId() != id || response.getName().length() > 255
+                    || response.getPairCode() == null || response.getPairCode().trim().isEmpty()
+                    || response.getPairCode().length() > 255) {
+                invalidRobotDetails(callback);
+                return;
+            }
+            callback.onSuccess(response);
+        });
     }
 
     public void unpairRobot(long id, Callback<RobotDevice> callback) {
@@ -205,6 +223,7 @@ public class RobotRepository {
                     success.accept(response.body());
                 } else if (response.isSuccessful()) {
                     if (operation == Operation.COMMAND) invalidCommand(callback);
+                    else if (operation == Operation.DETAIL) invalidRobotDetails(callback);
                     else if (operation == Operation.TELEMETRY) invalidTelemetry(callback);
                     else invalidResponse(callback);
                 } else {
@@ -216,6 +235,8 @@ public class RobotRepository {
                 if (call.isCanceled() || current != generation.get()) return;
                 callback.onError(0, operation == Operation.COMMAND
                                 ? "Chưa xác nhận được kết quả gửi lệnh. Vui lòng kiểm tra kết nối và trạng thái robot."
+                                : operation == Operation.DETAIL
+                                ? "Không tải được thông tin thiết bị. Vui lòng kiểm tra kết nối và thử lại."
                                 : operation == Operation.TELEMETRY
                                 ? "Không tải được dữ liệu robot. Vui lòng kiểm tra kết nối và thử lại."
                                 : "Không thể xác nhận kết quả từ máy chủ. Kiểm tra kết nối rồi tải lại danh sách hoặc thử lại.",
@@ -234,6 +255,10 @@ public class RobotRepository {
 
     private void invalidCommand(Callback<?> callback) {
         callback.onError(0, "Chưa xác nhận được kết quả gửi lệnh từ máy chủ.", Collections.emptyMap());
+    }
+
+    private void invalidRobotDetails(Callback<?> callback) {
+        callback.onError(0, "Thông tin thiết bị trả về không hợp lệ. Vui lòng thử lại.", Collections.emptyMap());
     }
 
     private void readError(int status, ResponseBody body, Operation operation, Callback<?> callback) {

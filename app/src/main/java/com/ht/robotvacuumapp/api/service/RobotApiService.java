@@ -17,6 +17,9 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface RobotApiService {
+    @GET("api/v1/robots/{id}")
+    Call<RobotResponse> getRobot(@Header("Authorization") String authorization, @Path("id") long id);
+
     @POST("api/v1/robots/{id}/commands")
     Call<RobotCommandResponse> sendCommand(@Header("Authorization") String authorization,
                                           @Path("id") long id, @Body RobotCommandRequest request);

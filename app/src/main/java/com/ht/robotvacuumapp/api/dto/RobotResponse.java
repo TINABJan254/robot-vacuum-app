@@ -6,11 +6,15 @@ import com.google.gson.JsonElement;
 public final class RobotResponse {
     @SerializedName("id") private Long id;
     @SerializedName("name") private String name;
+    @SerializedName("pairCode") private JsonElement pairCode;
     @SerializedName("userId") private JsonElement userId;
 
-    // The backend also returns pairCode; it is not needed for display or stored locally.
     public Long getId() { return id; }
     public String getName() { return name; }
+    public String getPairCode() {
+        return pairCode != null && pairCode.isJsonPrimitive() && pairCode.getAsJsonPrimitive().isString()
+                ? pairCode.getAsString() : null;
+    }
     public Long getUserId() {
         if (userId == null || !userId.isJsonPrimitive() || !userId.getAsJsonPrimitive().isNumber()) return null;
         try {
