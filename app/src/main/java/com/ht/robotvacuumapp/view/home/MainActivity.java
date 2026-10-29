@@ -98,7 +98,7 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
         findViewById(R.id.btn_top_add).setOnClickListener(v -> viewModel.openPairDialog());
         findViewById(R.id.btn_empty_add_robot).setOnClickListener(v -> viewModel.openPairDialog());
         findViewById(R.id.btn_top_notification).setOnClickListener(v ->
-                Toast.makeText(this, "Bạn không có thông báo mới", Toast.LENGTH_SHORT).show());
+                startActivity(new Intent(this, com.ht.robotvacuumapp.view.notification.NotificationActivity.class)));
         tvRefresh.setOnClickListener(v -> viewModel.loadRobots());
         retryRobots.setOnClickListener(v -> viewModel.loadRobots());
         findViewById(R.id.tab_robot).setOnClickListener(v -> viewModel.selectTab(0));

@@ -1,0 +1,39 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="44dp"
+    android:height="44dp"
+    android:viewportWidth="44"
+    android:viewportHeight="44">
+
+    <!-- Outer Circular Body -->
+    <path
+        android:fillColor="#23272F"
+        android:strokeColor="#363C47"
+        android:strokeWidth="1"
+        android:pathData="M22,2 A20,20 0 1,1 21.9,2 Z" />
+
+    <!-- Front Bumper Arc -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#171A20"
+        android:strokeWidth="1.2"
+        android:pathData="M7,12 C11,6 33,6 37,12" />
+
+    <!-- Center Turret / Sensor Circle -->
+    <path
+        android:fillColor="#181B22"
+        android:strokeColor="#3A404D"
+        android:strokeWidth="1"
+        android:pathData="M22,13 A8,8 0 1,1 21.9,13 Z" />
+
+    <!-- Inner Lidar Core Dot -->
+    <path
+        android:fillColor="#2E62FF"
+        android:pathData="M22,19 A2.5,2.5 0 1,1 21.9,19 Z" />
+
+    <!-- Bottom Indicator Line -->
+    <path
+        android:strokeColor="#3A404D"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M18,34 L26,34" />
+</vector>

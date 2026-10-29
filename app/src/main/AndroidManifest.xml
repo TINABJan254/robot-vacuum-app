@@ -48,6 +48,9 @@
         <activity
             android:name=".view.robot.CleaningHistoryActivity"
             android:exported="false" />
+        <activity
+            android:name=".view.notification.NotificationActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

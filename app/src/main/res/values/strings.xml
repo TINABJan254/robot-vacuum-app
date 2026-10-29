@@ -127,4 +127,7 @@
     <string name="title_cleaning_history">Nhật ký làm sạch</string>
     <string name="history_times_label">Lần</string>
     <string name="history_time_label">Thời gian</string>
+
+    <!-- Notification Screen Strings -->
+    <string name="title_notification">Thông báo</string>
 </resources>
