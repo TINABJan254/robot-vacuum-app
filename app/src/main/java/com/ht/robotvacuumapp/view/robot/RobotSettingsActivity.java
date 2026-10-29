@@ -93,9 +93,14 @@ public class RobotSettingsActivity extends AppCompatActivity {
 
         rowRobotName.setOnClickListener(v -> viewModel.openRenameDialog());
 
-        rowHistory.setOnClickListener(v ->
-                Toast.makeText(this, "Nhật ký hoạt động", Toast.LENGTH_SHORT).show()
-        );
+        rowHistory.setOnClickListener(v -> {
+            Intent intent = new Intent(this, CleaningHistoryActivity.class);
+            if (viewModel != null && viewModel.getUiState().getValue() != null) {
+                intent.putExtra(CleaningHistoryActivity.EXTRA_ROBOT_NAME, viewModel.getUiState().getValue().robotName);
+                intent.putExtra(CleaningHistoryActivity.EXTRA_ROBOT_ID, viewModel.getUiState().getValue().robotId);
+            }
+            startActivity(intent);
+        });
 
         rowSchedule.setOnClickListener(v -> {
             Intent intent = new Intent(this, RobotScheduleActivity.class);

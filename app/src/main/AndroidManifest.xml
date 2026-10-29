@@ -45,6 +45,9 @@
         <activity
             android:name=".view.robot.DeviceInfoActivity"
             android:exported="false" />
+        <activity
+            android:name=".view.robot.CleaningHistoryActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
