@@ -1,77 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout_schedule_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="14dp"
-    android:background="@drawable/bg_card_settings_group"
-    android:elevation="1dp"
-    android:orientation="vertical"
-    android:paddingHorizontal="20dp"
-    android:paddingVertical="16dp">
+    android:clipChildren="true"
+    android:clipToPadding="true">
 
-    <!-- Timezone / Label -->
-    <TextView
-        android:id="@+id/tv_schedule_timezone"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/schedule_default_tz"
-        android:textColor="@color/text_hint"
-        android:textSize="12sp"
-        tools:text="GMT+07:00" />
+    <!-- Background Layer: Red Delete Container -->
+    <FrameLayout
+        android:id="@+id/layout_delete_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_card_schedule_delete">
 
-    <!-- Main Row: Time + Mode + Toggle Switch -->
+        <!-- Left Delete Button (khi vuốt sang phải) -->
+        <TextView
+            android:id="@+id/btn_delete_schedule_left"
+            android:layout_width="86dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="Xóa"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <!-- Right Delete Button (khi vuốt sang trái) -->
+        <TextView
+            android:id="@+id/btn_delete_schedule_right"
+            android:layout_width="86dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="Xóa"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <!-- Foreground Layer: White Schedule Card -->
     <LinearLayout
+        android:id="@+id/layout_card_foreground"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:background="@drawable/bg_card_settings_group"
+        android:clickable="true"
+        android:elevation="2dp"
+        android:focusable="true"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="16dp">
 
+        <!-- Timezone / Label -->
         <TextView
-            android:id="@+id/tv_schedule_time"
+            android:id="@+id/tv_schedule_timezone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="08:00"
-            android:textColor="@color/text_title"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            tools:text="08:00" />
+            android:text="@string/schedule_default_tz"
+            android:textColor="@color/text_hint"
+            android:textSize="12sp"
+            tools:text="GMT+07:00" />
 
-        <TextView
-            android:id="@+id/tv_schedule_mode"
-            android:layout_width="0dp"
+        <!-- Main Row: Time + Mode + Toggle Switch -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="@string/schedule_mode_auto"
-            android:textColor="@color/text_primary"
-            android:textSize="14sp"
-            tools:text="Dọn dẹp tự động" />
+            android:layout_marginTop="4dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/switch_schedule"
+            <TextView
+                android:id="@+id/tv_schedule_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="08:00"
+                android:textColor="@color/text_title"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                tools:text="08:00" />
+
+            <TextView
+                android:id="@+id/tv_schedule_mode"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/schedule_mode_auto"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                tools:text="Dọn dẹp tự động" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_schedule"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:splitTrack="false"
+                app:thumbTint="@color/switch_thumb_white_selector"
+                app:trackTint="@color/switch_track_blue_selector"
+                android:thumb="@drawable/bg_switch_thumb"
+                android:track="@drawable/bg_switch_track"
+                app:showText="false" />
+        </LinearLayout>
+
+        <!-- Repeat Days -->
+        <TextView
+            android:id="@+id/tv_schedule_repeat"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="true"
-            android:splitTrack="false"
-            android:thumb="@drawable/bg_switch_thumb"
-            android:track="@drawable/bg_switch_track"
-            app:showText="false" />
+            android:layout_marginTop="8dp"
+            android:text="@string/schedule_days_workdays"
+            android:textColor="@color/text_hint"
+            android:textSize="13sp"
+            tools:text="Ngày làm việc" />
+
     </LinearLayout>
 
-    <!-- Repeat Days -->
-    <TextView
-        android:id="@+id/tv_schedule_repeat"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/schedule_days_workdays"
-        android:textColor="@color/text_hint"
-        android:textSize="13sp"
-        tools:text="Ngày làm việc" />
-
-</LinearLayout>
+</FrameLayout>

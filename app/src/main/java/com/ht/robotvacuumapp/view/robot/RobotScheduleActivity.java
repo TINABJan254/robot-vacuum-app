@@ -97,9 +97,24 @@ public class RobotScheduleActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         rvSchedules.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new ScheduleAdapter(scheduleList, (item, isChecked, position) -> {
-            String status = isChecked ? "Bật" : "Tắt";
-            Toast.makeText(this, status + " lịch: " + item.getTime(), Toast.LENGTH_SHORT).show();
+        adapter = new ScheduleAdapter(scheduleList, new ScheduleAdapter.OnScheduleActionListener() {
+            @Override
+            public void onToggle(ScheduleItem item, boolean isChecked, int position) {
+                String status = isChecked ? "Bật" : "Tắt";
+                Toast.makeText(RobotScheduleActivity.this, status + " lịch: " + item.getTime(), Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onDelete(ScheduleItem item, int position) {
+                if (position >= 0 && position < scheduleList.size()) {
+                    String deletedTime = item.getTime();
+                    scheduleList.remove(position);
+                    adapter.notifyItemRemoved(position);
+                    adapter.notifyItemRangeChanged(position, scheduleList.size() - position);
+                    Toast.makeText(RobotScheduleActivity.this, "Đã xóa lịch: " + deletedTime, Toast.LENGTH_SHORT).show();
+                    updateUIState();
+                }
+            }
         });
         rvSchedules.setAdapter(adapter);
     }

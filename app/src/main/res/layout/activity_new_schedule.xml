@@ -173,6 +173,8 @@
                         android:layout_height="wrap_content"
                         android:checked="false"
                         android:splitTrack="false"
+                        app:thumbTint="@color/switch_thumb_white_selector"
+                        app:trackTint="@color/switch_track_blue_selector"
                         android:thumb="@drawable/bg_switch_thumb"
                         android:track="@drawable/bg_switch_track"
                         app:showText="false" />
