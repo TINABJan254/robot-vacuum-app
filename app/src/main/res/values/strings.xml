@@ -130,4 +130,12 @@
 
     <!-- Notification Screen Strings -->
     <string name="title_notification">Thông báo</string>
+    <string name="notification_loading">Đang tải thông báo…</string>
+    <string name="notification_loading_more">Đang tải thêm thông báo…</string>
+    <string name="notification_empty">Chưa có thông báo</string>
+    <string name="notification_no_message">Thông báo không có nội dung chi tiết.</string>
+    <string name="notification_marking_read">Đang cập nhật trạng thái đã đọc…</string>
+    <string name="notification_close">Đóng</string>
+    <string name="notification_read">Đã đọc</string>
+    <string name="notification_unread">Chưa đọc</string>
 </resources>

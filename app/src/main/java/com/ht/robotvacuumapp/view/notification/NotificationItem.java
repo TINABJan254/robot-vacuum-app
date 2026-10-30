@@ -1,41 +1,28 @@
 package com.ht.robotvacuumapp.view.notification;
 
-public class NotificationItem {
-    private final String title;
-    private final String deviceName;
-    private final String time;
-    private final String date;
-    private boolean unread;
+import com.ht.robotvacuumapp.api.dto.AlertResponse;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
-    public NotificationItem(String title, String deviceName, String time, String date, boolean unread) {
-        this.title = title;
-        this.deviceName = deviceName;
-        this.time = time;
-        this.date = date;
-        this.unread = unread;
-    }
+/** Display values derived from a validated backend response; unread is never toggled locally. */
+public final class NotificationItem {
+    private final long id;
+    private final String title, deviceName, time, date, readAt;
 
-    public String getTitle() {
-        return title;
+    public NotificationItem(AlertResponse alert) {
+        id = alert.getId();
+        title = alert.getTitle();
+        deviceName = alert.getRobotName();
+        readAt = alert.getReadAt();
+        Date created = new Date(alert.getCreatedAtMillis());
+        time = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(created);
+        date = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(created);
     }
-
-    public String getDeviceName() {
-        return deviceName;
-    }
-
-    public String getTime() {
-        return time;
-    }
-
-    public String getDate() {
-        return date;
-    }
-
-    public boolean isUnread() {
-        return unread;
-    }
-
-    public void setUnread(boolean unread) {
-        this.unread = unread;
-    }
+    public long getId() { return id; }
+    public String getTitle() { return title; }
+    public String getDeviceName() { return deviceName; }
+    public String getTime() { return time; }
+    public String getDate() { return date; }
+    public boolean isUnread() { return readAt == null; }
 }
