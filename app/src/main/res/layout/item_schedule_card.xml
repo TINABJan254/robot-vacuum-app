@@ -65,6 +65,7 @@
             android:id="@+id/tv_schedule_timezone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             android:text="@string/schedule_default_tz"
             android:textColor="@color/text_hint"
             android:textSize="12sp"
@@ -96,16 +97,17 @@
                 android:layout_weight="1"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="@string/schedule_mode_auto"
+                android:text="@string/schedule_work_label"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
-                tools:text="Dọn dẹp tự động" />
+                tools:text="Lịch làm việc" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switch_schedule"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"
+                android:contentDescription="@string/schedule_enabled_description"
                 android:splitTrack="false"
                 app:thumbTint="@color/switch_thumb_white_selector"
                 app:trackTint="@color/switch_track_blue_selector"

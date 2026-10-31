@@ -1,63 +1,25 @@
 package com.ht.robotvacuumapp.view.robot;
 
-public class ScheduleItem {
-    private String id;
-    private String time;
-    private String timezone;
-    private String mode;
-    private String repeatDays;
-    private boolean enabled;
+import com.ht.robotvacuumapp.api.dto.ScheduleResponse;
+import java.util.List;
 
-    public ScheduleItem(String id, String time, String timezone, String mode, String repeatDays, boolean enabled) {
-        this.id = id;
-        this.time = time;
-        this.timezone = timezone;
-        this.mode = mode;
-        this.repeatDays = repeatDays;
-        this.enabled = enabled;
+/** Confirmed server data plus the transient state of one visible row. */
+public final class ScheduleItem {
+    private final long id;
+    private final String time;
+    private final List<Integer> days;
+    private final boolean enabled, busy;
+    public ScheduleItem(ScheduleResponse response, Boolean pendingEnabled, boolean deleting) {
+        id = response.getId();
+        String value = response.getTime();
+        time = value.length() == 8 && value.endsWith(":00") ? value.substring(0, 5) : value;
+        days = response.getDaysOfWeek();
+        enabled = pendingEnabled == null ? response.isEnabled() : pendingEnabled;
+        busy = pendingEnabled != null || deleting;
     }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getTime() {
-        return time;
-    }
-
-    public void setTime(String time) {
-        this.time = time;
-    }
-
-    public String getTimezone() {
-        return timezone;
-    }
-
-    public void setTimezone(String timezone) {
-        this.timezone = timezone;
-    }
-
-    public String getMode() {
-        return mode;
-    }
-
-    public void setMode(String mode) {
-        this.mode = mode;
-    }
-
-    public String getRepeatDays() {
-        return repeatDays;
-    }
-
-    public void setRepeatDays(String repeatDays) {
-        this.repeatDays = repeatDays;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
+    public long getId() { return id; }
+    public String getTime() { return time; }
+    public List<Integer> getDays() { return days; }
+    public boolean isEnabled() { return enabled; }
+    public boolean isBusy() { return busy; }
 }

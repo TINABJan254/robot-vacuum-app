@@ -59,6 +59,54 @@
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <LinearLayout
+        android:id="@+id/layout_schedule_feedback"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/top_bar">
+        <ProgressBar
+            android:id="@+id/schedule_progress"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:visibility="gone" />
+        <TextView
+            android:id="@+id/schedule_feedback"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:accessibilityLiveRegion="polite"
+            android:textColor="@color/text_secondary" />
+        <TextView
+            android:id="@+id/schedule_retry"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center"
+            android:paddingHorizontal="8dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:text="@string/action_retry"
+            android:textColor="@color/primary_green"
+            android:visibility="gone" />
+        <TextView
+            android:id="@+id/btn_refresh_schedules"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center"
+            android:paddingHorizontal="8dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:text="@string/action_refresh"
+            android:textColor="@color/primary_green" />
+    </LinearLayout>
+
     <!-- State 1: List State (When schedules exist) -->
     <LinearLayout
         android:id="@+id/layout_list_state"
@@ -69,7 +117,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/top_bar">
+        app:layout_constraintTop_toBottomOf="@id/layout_schedule_feedback">
 
         <!-- Notice Hint Text -->
         <TextView
@@ -94,6 +142,38 @@
             android:paddingHorizontal="16dp"
             android:paddingBottom="24dp"
             tools:listitem="@layout/item_schedule_card" />
+        <LinearLayout
+            android:id="@+id/schedule_footer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:visibility="gone">
+            <ProgressBar
+                android:id="@+id/schedule_more_progress"
+                style="?android:attr/progressBarStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/schedule_more_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:accessibilityLiveRegion="polite"
+                android:textColor="@color/text_secondary" />
+            <TextView
+                android:id="@+id/schedule_more_retry"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:paddingHorizontal="16dp"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="@string/action_retry"
+                android:textColor="@color/primary_green" />
+        </LinearLayout>
     </LinearLayout>
 
     <!-- State 2: Empty State (When no schedule exists) -->
@@ -106,7 +186,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/top_bar">
+        app:layout_constraintTop_toBottomOf="@id/layout_schedule_feedback">
 
         <!-- Center Image & Hint Container -->
         <LinearLayout

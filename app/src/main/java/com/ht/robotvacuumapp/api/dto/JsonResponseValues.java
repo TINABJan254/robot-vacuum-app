@@ -30,6 +30,13 @@ final class JsonResponseValues {
         return value.getAsString();
     }
 
+    static boolean booleanValue(JsonElement value) {
+        if (value == null || !value.isJsonPrimitive() || !value.getAsJsonPrimitive().isBoolean()) {
+            throw new IllegalArgumentException("Expected boolean");
+        }
+        return value.getAsBoolean();
+    }
+
     /** Epoch seconds as a decimal retain fractions when comparing receipt timestamps. */
     static BigDecimal timestamp(String value) {
         Matcher matcher = ISO.matcher(value);

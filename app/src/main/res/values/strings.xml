@@ -138,4 +138,15 @@
     <string name="notification_close">Đóng</string>
     <string name="notification_read">Đã đọc</string>
     <string name="notification_unread">Chưa đọc</string>
+    <string name="schedule_loading">Đang tải lịch…</string>
+    <string name="schedule_loading_more">Đang tải thêm lịch…</string>
+    <string name="schedule_saving">Đang lưu…</string>
+    <string name="schedule_work_label">Lịch làm việc</string>
+    <string name="schedule_no_repeat_days">Chưa chọn ngày lặp</string>
+    <string name="schedule_every_day">Hằng ngày</string>
+    <string name="schedule_weekend">Cuối tuần</string>
+    <string name="schedule_enabled_description">Bật hoặc tắt lịch</string>
+    <string-array name="schedule_day_names">
+        <item>T2</item><item>T3</item><item>T4</item><item>T5</item><item>T6</item><item>T7</item><item>CN</item>
+    </string-array>
 </resources>

@@ -105,6 +105,7 @@ public class RobotSettingsActivity extends AppCompatActivity {
         rowSchedule.setOnClickListener(v -> {
             Intent intent = new Intent(this, RobotScheduleActivity.class);
             intent.putExtra(RobotScheduleActivity.EXTRA_ROBOT_NAME, viewModel.getUiState().getValue().robotName);
+            intent.putExtra(RobotScheduleActivity.EXTRA_ROBOT_ID, viewModel.getUiState().getValue().robotId);
             startActivity(intent);
         });
 

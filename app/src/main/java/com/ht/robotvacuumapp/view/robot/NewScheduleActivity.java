@@ -8,252 +8,130 @@ import android.view.View;
 import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-
+import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.ht.robotvacuumapp.R;
-
+import com.ht.robotvacuumapp.model.repository.AuthRepository;
+import com.ht.robotvacuumapp.model.repository.ScheduleRepository;
+import com.ht.robotvacuumapp.view.auth.LoginActivity;
+import com.ht.robotvacuumapp.viewmodel.robot.NewScheduleUiState;
+import com.ht.robotvacuumapp.viewmodel.robot.NewScheduleViewModel;
 import java.util.Locale;
 
 public class NewScheduleActivity extends AppCompatActivity {
+    public static final String EXTRA_ROBOT_ID = "extra_robot_id";
+    public static final String EXTRA_RESULT_ROBOT_ID = "extra_result_robot_id";
+    public static final String EXTRA_CREATED_SCHEDULE_ID = "extra_created_schedule_id";
+    private NewScheduleViewModel viewModel;
+    private TextView save, cancel, time, error;
+    private View rowTime, rowRepeat, repeatDays;
+    private SwitchCompat repeat;
+    private final TextView[] dayButtons = new TextView[7];
+    private final int[] dayValues = {7, 1, 2, 3, 4, 5, 6};
+    private boolean syncing, finishingAfterSave, navigatingToLogin;
+    private BottomSheetDialog timePicker;
 
-    public static final String EXTRA_RESULT_TIME = "extra_result_time";
-    public static final String EXTRA_RESULT_MODE = "extra_result_mode";
-    public static final String EXTRA_RESULT_REPEAT = "extra_result_repeat";
-
-    private TextView btnCancel;
-    private TextView btnSave;
-    private View rowSetTime;
-    private TextView tvSelectedTime;
-    private View rowRepeat;
-    private SwitchCompat switchRepeat;
-    private View layoutRepeatDays;
-
-    private TextView[] dayButtons = new TextView[7];
-    private boolean[] selectedDays = new boolean[]{false, true, true, true, true, true, false}; // CN: 0, T2: 1, T3: 2, T4: 3, T5: 4, T6: 5, T7: 6
-
-    private TextView btnSegAuto;
-    private TextView btnSegRoom;
-    private TextView btnSegArea;
-
-    private int selectedHour = 8;
-    private int selectedMinute = 0;
-    private int selectedCleanOption = 0; // 0: Auto, 1: Room, 2: Area
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_new_schedule);
-
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.new_schedule_root), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
             return insets;
         });
-
-        initViews();
-        setupActions();
-        setupDaySelector();
-        setupSegmentedControl();
-    }
-
-    private void initViews() {
-        btnCancel = findViewById(R.id.btn_cancel);
-        btnSave = findViewById(R.id.btn_save);
-        rowSetTime = findViewById(R.id.row_set_time);
-        tvSelectedTime = findViewById(R.id.tv_selected_time);
-        rowRepeat = findViewById(R.id.row_repeat);
-        switchRepeat = findViewById(R.id.switch_repeat);
-        layoutRepeatDays = findViewById(R.id.layout_repeat_days);
-
-        dayButtons[0] = findViewById(R.id.btn_day_cn);
-        dayButtons[1] = findViewById(R.id.btn_day_t2);
-        dayButtons[2] = findViewById(R.id.btn_day_t3);
-        dayButtons[3] = findViewById(R.id.btn_day_t4);
-        dayButtons[4] = findViewById(R.id.btn_day_t5);
-        dayButtons[5] = findViewById(R.id.btn_day_t6);
-        dayButtons[6] = findViewById(R.id.btn_day_t7);
-
-        btnSegAuto = findViewById(R.id.btn_seg_auto);
-        btnSegRoom = findViewById(R.id.btn_seg_room);
-        btnSegArea = findViewById(R.id.btn_seg_area);
-
-        updateTimeDisplay();
-        updateDayViews();
-    }
-
-    private void setupActions() {
-        btnCancel.setOnClickListener(v -> finish());
-
-        rowSetTime.setOnClickListener(v -> showTimePickerBottomSheet());
-
-        rowRepeat.setOnClickListener(v -> switchRepeat.setChecked(!switchRepeat.isChecked()));
-
-        switchRepeat.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            layoutRepeatDays.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+        viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
+            @NonNull @Override public <T extends ViewModel> T create(@NonNull Class<T> type) {
+                return type.cast(new NewScheduleViewModel(getIntent().getStringExtra(EXTRA_ROBOT_ID),
+                        new ScheduleRepository(getApplicationContext()), new AuthRepository(getApplicationContext())));
+            }
+        }).get(NewScheduleViewModel.class);
+        save = findViewById(R.id.btn_save); cancel = findViewById(R.id.btn_cancel);
+        time = findViewById(R.id.tv_selected_time); error = findViewById(R.id.schedule_form_error);
+        rowTime = findViewById(R.id.row_set_time); rowRepeat = findViewById(R.id.row_repeat);
+        repeat = findViewById(R.id.switch_repeat); repeatDays = findViewById(R.id.layout_repeat_days);
+        int[] ids = {R.id.btn_day_cn, R.id.btn_day_t2, R.id.btn_day_t3, R.id.btn_day_t4, R.id.btn_day_t5, R.id.btn_day_t6, R.id.btn_day_t7};
+        for (int i = 0; i < ids.length; i++) {
+            dayButtons[i] = findViewById(ids[i]);
+            final int day = dayValues[i];
+            dayButtons[i].setOnClickListener(v -> viewModel.toggleDay(day));
+        }
+        cancel.setOnClickListener(v -> finish());
+        save.setOnClickListener(v -> viewModel.save());
+        rowTime.setOnClickListener(v -> showTimePicker());
+        rowRepeat.setOnClickListener(v -> viewModel.setRepeat(!viewModel.getUiState().getValue().repeat));
+        repeat.setOnCheckedChangeListener((button, checked) -> { if (!syncing) viewModel.setRepeat(checked); });
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override public void handleOnBackPressed() { if (!viewModel.getUiState().getValue().isSaving) finish(); }
         });
-
-        btnSave.setOnClickListener(v -> saveAndFinish());
+        viewModel.getUiState().observe(this, this::render);
     }
-
-    private void setupDaySelector() {
-        for (int i = 0; i < 7; i++) {
-            final int dayIndex = i;
-            if (dayButtons[dayIndex] != null) {
-                dayButtons[dayIndex].setOnClickListener(v -> {
-                    selectedDays[dayIndex] = !selectedDays[dayIndex];
-                    updateDayViews();
-                });
+    private void render(NewScheduleUiState s) {
+        if (s.requiresLogin) {
+            if (!navigatingToLogin) {
+                navigatingToLogin = true;
+                if (s.error != null) Toast.makeText(this, s.error, Toast.LENGTH_LONG).show();
+                startActivity(new Intent(this, LoginActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
+                finish();
             }
+            return;
         }
-    }
-
-    private void updateDayViews() {
-        int colorSelected = ContextCompat.getColor(this, R.color.white);
-        int colorUnselected = ContextCompat.getColor(this, R.color.text_secondary);
-
-        for (int i = 0; i < 7; i++) {
-            if (dayButtons[i] != null) {
-                if (selectedDays[i]) {
-                    dayButtons[i].setBackgroundResource(R.drawable.bg_day_circle_selected);
-                    dayButtons[i].setTextColor(colorSelected);
-                } else {
-                    dayButtons[i].setBackgroundResource(R.drawable.bg_day_circle_unselected);
-                    dayButtons[i].setTextColor(colorUnselected);
-                }
+        if (s.createdScheduleId != null) {
+            if (!finishingAfterSave) {
+                finishingAfterSave = true;
+                setResult(RESULT_OK, new Intent().putExtra(EXTRA_RESULT_ROBOT_ID, s.robotId.longValue())
+                        .putExtra(EXTRA_CREATED_SCHEDULE_ID, s.createdScheduleId.longValue()));
+                finish();
             }
+            return;
         }
-    }
-
-    private void setupSegmentedControl() {
-        btnSegAuto.setOnClickListener(v -> selectCleanOption(0));
-        btnSegRoom.setOnClickListener(v -> selectCleanOption(1));
-        btnSegArea.setOnClickListener(v -> selectCleanOption(2));
-    }
-
-    private void selectCleanOption(int index) {
-        selectedCleanOption = index;
-        int activeColor = ContextCompat.getColor(this, R.color.white);
-        int inactiveColor = ContextCompat.getColor(this, R.color.icon_tint);
-
-        btnSegAuto.setBackgroundResource(index == 0 ? R.drawable.bg_segmented_item_active : android.R.color.transparent);
-        btnSegAuto.setTextColor(index == 0 ? activeColor : inactiveColor);
-        btnSegAuto.getPaint().setFakeBoldText(index == 0);
-
-        btnSegRoom.setBackgroundResource(index == 1 ? R.drawable.bg_segmented_item_active : android.R.color.transparent);
-        btnSegRoom.setTextColor(index == 1 ? activeColor : inactiveColor);
-        btnSegRoom.getPaint().setFakeBoldText(index == 1);
-
-        btnSegArea.setBackgroundResource(index == 2 ? R.drawable.bg_segmented_item_active : android.R.color.transparent);
-        btnSegArea.setTextColor(index == 2 ? activeColor : inactiveColor);
-        btnSegArea.getPaint().setFakeBoldText(index == 2);
-    }
-
-    private void showTimePickerBottomSheet() {
-        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
-        View sheetView = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_time_picker, null);
-        bottomSheetDialog.setContentView(sheetView);
-
-        // Make background transparent so rounded top corners display properly
-        if (sheetView.getParent() != null) {
-            ((View) sheetView.getParent()).setBackgroundColor(Color.TRANSPARENT);
+        boolean editable = s.robotId != null && !s.isSaving;
+        time.setText(String.format(Locale.getDefault(), "%02d:%02d", s.hour, s.minute));
+        save.setEnabled(editable);
+        save.setText(s.isSaving ? R.string.schedule_saving : R.string.action_save_schedule);
+        cancel.setEnabled(!s.isSaving);
+        rowTime.setEnabled(editable); rowRepeat.setEnabled(editable); repeat.setEnabled(editable);
+        syncing = true; repeat.setChecked(s.repeat); syncing = false;
+        repeatDays.setVisibility(s.repeat ? View.VISIBLE : View.GONE);
+        for (int i = 0; i < dayButtons.length; i++) {
+            boolean selected = s.days.contains(dayValues[i]);
+            dayButtons[i].setEnabled(editable);
+            dayButtons[i].setBackgroundResource(selected ? R.drawable.bg_day_circle_selected : R.drawable.bg_day_circle_unselected);
+            dayButtons[i].setTextColor(ContextCompat.getColor(this, selected ? R.color.white : R.color.text_secondary));
         }
-
-        NumberPicker pickerHour = sheetView.findViewById(R.id.picker_hour);
-        NumberPicker pickerMinute = sheetView.findViewById(R.id.picker_minute);
-        TextView btnCancelTime = sheetView.findViewById(R.id.btn_cancel_time);
-        TextView btnConfirmTime = sheetView.findViewById(R.id.btn_confirm_time);
-
-        // Configure Hour Picker (00 - 23)
-        pickerHour.setMinValue(0);
-        pickerHour.setMaxValue(23);
-        pickerHour.setValue(selectedHour);
-        pickerHour.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
-        pickerHour.setWrapSelectorWheel(true);
-
-        // Configure Minute Picker (00 - 59)
-        pickerMinute.setMinValue(0);
-        pickerMinute.setMaxValue(59);
-        pickerMinute.setValue(selectedMinute);
-        pickerMinute.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
-        pickerMinute.setWrapSelectorWheel(true);
-
-        btnCancelTime.setOnClickListener(v -> bottomSheetDialog.dismiss());
-
-        btnConfirmTime.setOnClickListener(v -> {
-            selectedHour = pickerHour.getValue();
-            selectedMinute = pickerMinute.getValue();
-            updateTimeDisplay();
-            bottomSheetDialog.dismiss();
+        error.setText(s.error);
+        error.setVisibility(s.error == null ? View.GONE : View.VISIBLE);
+    }
+    private void showTimePicker() {
+        NewScheduleUiState s = viewModel.getUiState().getValue();
+        if (s.isSaving || s.robotId == null || (timePicker != null && timePicker.isShowing())) return;
+        timePicker = new BottomSheetDialog(this);
+        View content = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_time_picker, null);
+        timePicker.setContentView(content);
+        if (content.getParent() instanceof View) ((View) content.getParent()).setBackgroundColor(Color.TRANSPARENT);
+        NumberPicker hour = content.findViewById(R.id.picker_hour), minute = content.findViewById(R.id.picker_minute);
+        hour.setMinValue(0); hour.setMaxValue(23); hour.setValue(s.hour);
+        minute.setMinValue(0); minute.setMaxValue(59); minute.setValue(s.minute);
+        hour.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
+        minute.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
+        hour.setWrapSelectorWheel(true); minute.setWrapSelectorWheel(true);
+        content.findViewById(R.id.btn_cancel_time).setOnClickListener(v -> timePicker.dismiss());
+        content.findViewById(R.id.btn_confirm_time).setOnClickListener(v -> {
+            hour.clearFocus(); minute.clearFocus();
+            viewModel.setTime(hour.getValue(), minute.getValue());
+            timePicker.dismiss();
         });
-
-        bottomSheetDialog.show();
+        timePicker.show();
     }
-
-    private void updateTimeDisplay() {
-        String timeStr = String.format(Locale.getDefault(), "%02d:%02d", selectedHour, selectedMinute);
-        tvSelectedTime.setText(timeStr);
-    }
-
-    private void saveAndFinish() {
-        String timeStr = String.format(Locale.getDefault(), "%02d:%02d", selectedHour, selectedMinute);
-        String modeStr;
-        switch (selectedCleanOption) {
-            case 1:
-                modeStr = getString(R.string.clean_opt_room);
-                break;
-            case 2:
-                modeStr = getString(R.string.clean_opt_area);
-                break;
-            case 0:
-            default:
-                modeStr = getString(R.string.schedule_mode_auto);
-                break;
-        }
-        String repeatStr;
-        if (!switchRepeat.isChecked()) {
-            repeatStr = "Chỉ một lần";
-        } else {
-            int count = 0;
-            for (boolean b : selectedDays) {
-                if (b) count++;
-            }
-            if (count == 7) {
-                repeatStr = "Hàng ngày";
-            } else if (count == 5 && !selectedDays[0] && selectedDays[1] && selectedDays[2] && selectedDays[3] && selectedDays[4] && selectedDays[5] && !selectedDays[6]) {
-                repeatStr = getString(R.string.schedule_days_workdays);
-            } else if (count == 2 && selectedDays[0] && selectedDays[6]) {
-                repeatStr = "Cuối tuần";
-            } else if (count == 0) {
-                repeatStr = "Chỉ một lần";
-            } else {
-                String[] dayNames = {"CN", "T2", "T3", "T4", "T5", "T6", "T7"};
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < 7; i++) {
-                    if (selectedDays[i]) {
-                        if (sb.length() > 0) sb.append(", ");
-                        sb.append(dayNames[i]);
-                    }
-                }
-                repeatStr = sb.toString();
-            }
-        }
-
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra(EXTRA_RESULT_TIME, timeStr);
-        resultIntent.putExtra(EXTRA_RESULT_MODE, modeStr);
-        resultIntent.putExtra(EXTRA_RESULT_REPEAT, repeatStr);
-        setResult(RESULT_OK, resultIntent);
-
-        Toast.makeText(this, "Đã lưu lịch dọn dẹp: " + timeStr, Toast.LENGTH_SHORT).show();
-        finish();
-    }
+    @Override protected void onDestroy() { if (timePicker != null) timePicker.dismiss(); super.onDestroy(); }
 }

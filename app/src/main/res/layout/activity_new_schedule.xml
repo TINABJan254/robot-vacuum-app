@@ -92,6 +92,16 @@
                 android:textColor="@color/schedule_notice_coral"
                 android:textSize="13sp" />
 
+            <TextView
+                android:id="@+id/schedule_form_error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginBottom="12dp"
+                android:accessibilityLiveRegion="polite"
+                android:textColor="@color/color_danger"
+                android:visibility="gone" />
+
             <!-- Card 1: Time & Repeat -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -127,6 +137,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
+                        android:visibility="gone"
                         android:text="@string/schedule_default_tz"
                         android:textColor="@color/text_hint"
                         android:textSize="13sp"
@@ -136,11 +147,10 @@
                         android:id="@+id/tv_selected_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="12:04"
                         android:textColor="@color/btn_primary_blue"
                         android:textSize="17sp"
                         android:textStyle="bold"
-                        tools:text="12:04" />
+                        tools:text="08:00" />
                 </LinearLayout>
 
                 <View
@@ -343,6 +353,8 @@
 
             <!-- Card 2: Cleaning Options (Tùy chọn làm sạch) -->
             <LinearLayout
+                android:id="@+id/layout_cleaning_options"
+                android:visibility="gone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"

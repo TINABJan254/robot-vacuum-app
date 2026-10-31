@@ -3,156 +3,136 @@ package com.ht.robotvacuumapp.view.robot;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.*;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.ht.robotvacuumapp.R;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.ht.robotvacuumapp.model.repository.AuthRepository;
+import com.ht.robotvacuumapp.model.repository.ScheduleRepository;
+import com.ht.robotvacuumapp.viewmodel.robot.RobotScheduleUiState;
+import com.ht.robotvacuumapp.viewmodel.robot.RobotScheduleViewModel;
 
 public class RobotScheduleActivity extends AppCompatActivity {
-
     public static final String EXTRA_ROBOT_NAME = "extra_robot_name";
     public static final String EXTRA_ROBOT_ID = "extra_robot_id";
-
-    private ImageView btnBack;
-    private ImageView btnTopAdd;
-    private View layoutListState;
-    private View layoutEmptyState;
-    private RecyclerView rvSchedules;
-    private AppCompatButton btnBottomAdd;
-
+    private RobotScheduleViewModel viewModel;
     private ScheduleAdapter adapter;
-    private final List<ScheduleItem> scheduleList = new ArrayList<>();
-
+    private RecyclerView list;
+    private LinearLayoutManager manager;
+    private View listState, emptyState, addTop, addBottom, refresh, progress, retry, footer, moreProgress, moreRetry;
+    private TextView feedback, moreText;
+    private boolean navigatingToLogin;
     private final ActivityResultLauncher<Intent> newScheduleLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
+            new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    Intent data = result.getData();
-                    String timeStr = data.getStringExtra(NewScheduleActivity.EXTRA_RESULT_TIME);
-                    String modeStr = data.getStringExtra(NewScheduleActivity.EXTRA_RESULT_MODE);
-                    String repeatStr = data.getStringExtra(NewScheduleActivity.EXTRA_RESULT_REPEAT);
-
-                    if (timeStr == null || timeStr.isEmpty()) timeStr = "12:04";
-                    if (modeStr == null || modeStr.isEmpty()) modeStr = getString(R.string.schedule_mode_auto);
-                    if (repeatStr == null || repeatStr.isEmpty()) repeatStr = getString(R.string.schedule_days_workdays);
-
-                    ScheduleItem newItem = new ScheduleItem(
-                            String.valueOf(System.currentTimeMillis()),
-                            timeStr,
-                            "GMT+07:00",
-                            modeStr,
-                            repeatStr,
-                            true
-                    );
-                    scheduleList.add(newItem);
-                    adapter.notifyItemInserted(scheduleList.size() - 1);
-                    updateUIState();
+                    viewModel.onCreated(result.getData().getLongExtra(NewScheduleActivity.EXTRA_RESULT_ROBOT_ID, -1),
+                            result.getData().getLongExtra(NewScheduleActivity.EXTRA_CREATED_SCHEDULE_ID, -1));
                 }
-            }
-    );
+            });
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_robot_schedule);
-
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.schedule_root), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
             return insets;
         });
-
-        initViews();
-        setupRecyclerView();
-        setupActions();
-
-        // Load sample schedule shown in design mockup
-        loadSampleSchedules();
-        updateUIState();
-    }
-
-    private void initViews() {
-        btnBack = findViewById(R.id.btn_back);
-        btnTopAdd = findViewById(R.id.btn_top_add);
-        layoutListState = findViewById(R.id.layout_list_state);
-        layoutEmptyState = findViewById(R.id.layout_empty_state);
-        rvSchedules = findViewById(R.id.rv_schedules);
-        btnBottomAdd = findViewById(R.id.btn_bottom_add);
-    }
-
-    private void setupRecyclerView() {
-        rvSchedules.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new ScheduleAdapter(scheduleList, new ScheduleAdapter.OnScheduleActionListener() {
-            @Override
-            public void onToggle(ScheduleItem item, boolean isChecked, int position) {
-                String status = isChecked ? "Bật" : "Tắt";
-                Toast.makeText(RobotScheduleActivity.this, status + " lịch: " + item.getTime(), Toast.LENGTH_SHORT).show();
+        viewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
+            @NonNull @Override public <T extends ViewModel> T create(@NonNull Class<T> type) {
+                return type.cast(new RobotScheduleViewModel(getIntent().getStringExtra(EXTRA_ROBOT_ID),
+                        new ScheduleRepository(getApplicationContext()), new AuthRepository(getApplicationContext())));
             }
-
-            @Override
-            public void onDelete(ScheduleItem item, int position) {
-                if (position >= 0 && position < scheduleList.size()) {
-                    String deletedTime = item.getTime();
-                    scheduleList.remove(position);
-                    adapter.notifyItemRemoved(position);
-                    adapter.notifyItemRangeChanged(position, scheduleList.size() - position);
-                    Toast.makeText(RobotScheduleActivity.this, "Đã xóa lịch: " + deletedTime, Toast.LENGTH_SHORT).show();
-                    updateUIState();
-                }
-            }
+        }).get(RobotScheduleViewModel.class);
+        listState = findViewById(R.id.layout_list_state);
+        emptyState = findViewById(R.id.layout_empty_state);
+        addTop = findViewById(R.id.btn_top_add);
+        addBottom = findViewById(R.id.btn_bottom_add);
+        refresh = findViewById(R.id.btn_refresh_schedules);
+        progress = findViewById(R.id.schedule_progress);
+        retry = findViewById(R.id.schedule_retry);
+        feedback = findViewById(R.id.schedule_feedback);
+        footer = findViewById(R.id.schedule_footer);
+        moreProgress = findViewById(R.id.schedule_more_progress);
+        moreRetry = findViewById(R.id.schedule_more_retry);
+        moreText = findViewById(R.id.schedule_more_text);
+        list = findViewById(R.id.rv_schedules);
+        manager = new LinearLayoutManager(this);
+        list.setLayoutManager(manager);
+        adapter = new ScheduleAdapter(new ScheduleAdapter.OnScheduleActionListener() {
+            @Override public void onToggle(long id, boolean enabled) { viewModel.setEnabled(id, enabled); }
+            @Override public void onDelete(long id) { viewModel.deleteSchedule(id); }
         });
-        rvSchedules.setAdapter(adapter);
+        list.setAdapter(adapter);
+        list.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override public void onScrolled(@NonNull RecyclerView view, int dx, int dy) { maybeLoadMore(); }
+        });
+        findViewById(R.id.btn_back).setOnClickListener(v -> finish());
+        addTop.setOnClickListener(v -> openNewSchedule());
+        addBottom.setOnClickListener(v -> openNewSchedule());
+        refresh.setOnClickListener(v -> viewModel.refresh());
+        retry.setOnClickListener(v -> viewModel.refresh());
+        moreRetry.setOnClickListener(v -> viewModel.loadNextPage());
+        viewModel.getUiState().observe(this, this::render);
     }
-
-    private void setupActions() {
-        btnBack.setOnClickListener(v -> finish());
-
-        btnTopAdd.setOnClickListener(v -> openNewScheduleScreen());
-        btnBottomAdd.setOnClickListener(v -> openNewScheduleScreen());
+    private void openNewSchedule() {
+        RobotScheduleUiState s = viewModel.getUiState().getValue();
+        if (s.robotId == null || s.requiresLogin || !s.loaded || s.listError != null || s.isLoading) return;
+        newScheduleLauncher.launch(new Intent(this, NewScheduleActivity.class)
+                .putExtra(NewScheduleActivity.EXTRA_ROBOT_ID, String.valueOf(s.robotId)));
     }
-
-    private void openNewScheduleScreen() {
-        Intent intent = new Intent(this, NewScheduleActivity.class);
-        newScheduleLauncher.launch(intent);
+    private void render(RobotScheduleUiState s) {
+        if (s.requiresLogin) {
+            if (!navigatingToLogin) {
+                navigatingToLogin = true;
+                if (s.message != null) Toast.makeText(this, s.message, Toast.LENGTH_LONG).show();
+                startActivity(new Intent(this, com.ht.robotvacuumapp.view.auth.LoginActivity.class)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
+                finish();
+            }
+            return;
+        }
+        boolean hasItems = !s.schedules.isEmpty();
+        boolean canAdd = s.robotId != null && s.loaded && s.listError == null && !s.isLoading;
+        adapter.submitSchedules(s.schedules, s.pendingEnabled, s.deleting);
+        listState.setVisibility(hasItems ? View.VISIBLE : View.GONE);
+        emptyState.setVisibility(!hasItems && s.loaded && !s.isLoading && s.listError == null ? View.VISIBLE : View.GONE);
+        addTop.setVisibility(hasItems ? View.VISIBLE : View.GONE);
+        addTop.setEnabled(canAdd);
+        addBottom.setEnabled(canAdd);
+        refresh.setEnabled(s.robotId != null && !s.isLoading);
+        progress.setVisibility(s.isLoading ? View.VISIBLE : View.GONE);
+        feedback.setText(s.listError != null ? s.listError : getString(R.string.schedule_loading));
+        feedback.setVisibility(s.isLoading || s.listError != null ? View.VISIBLE : View.GONE);
+        retry.setVisibility(s.listError != null && s.robotId != null ? View.VISIBLE : View.GONE);
+        footer.setVisibility(s.isLoadingMore || s.moreError != null ? View.VISIBLE : View.GONE);
+        moreProgress.setVisibility(s.isLoadingMore ? View.VISIBLE : View.GONE);
+        moreText.setText(s.moreError != null ? s.moreError : getString(R.string.schedule_loading_more));
+        moreRetry.setVisibility(s.moreError == null ? View.GONE : View.VISIBLE);
+        moreRetry.setEnabled(!s.isLoadingMore);
+        if (s.message != null) {
+            viewModel.acknowledgeMessage();
+            Toast.makeText(this, s.message, Toast.LENGTH_SHORT).show();
+        }
+        list.post(this::maybeLoadMore);
     }
-
-    private void loadSampleSchedules() {
-        scheduleList.clear();
-        // Add sample schedule: 08:00 - Dọn dẹp tự động - Ngày làm việc
-        scheduleList.add(new ScheduleItem(
-                "1",
-                "08:00",
-                "GMT+07:00",
-                getString(R.string.schedule_mode_auto),
-                getString(R.string.schedule_days_workdays),
-                true
-        ));
-    }
-
-    private void updateUIState() {
-        if (scheduleList.isEmpty()) {
-            layoutEmptyState.setVisibility(View.VISIBLE);
-            layoutListState.setVisibility(View.GONE);
-            btnTopAdd.setVisibility(View.GONE);
-        } else {
-            layoutEmptyState.setVisibility(View.GONE);
-            layoutListState.setVisibility(View.VISIBLE);
-            btnTopAdd.setVisibility(View.VISIBLE);
+    private void maybeLoadMore() {
+        if (isFinishing() || !getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) return;
+        RobotScheduleUiState s = viewModel.getUiState().getValue();
+        if (s.moreError == null && !s.schedules.isEmpty() && manager.findLastVisibleItemPosition() >= adapter.getItemCount() - 4) {
+            viewModel.loadNextPage();
         }
     }
+    @Override protected void onStart() { super.onStart(); list.post(this::maybeLoadMore); }
 }
