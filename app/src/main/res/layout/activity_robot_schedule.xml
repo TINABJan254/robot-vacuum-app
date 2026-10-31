@@ -94,17 +94,6 @@
             android:text="@string/action_retry"
             android:textColor="@color/primary_green"
             android:visibility="gone" />
-        <TextView
-            android:id="@+id/btn_refresh_schedules"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:gravity="center"
-            android:paddingHorizontal="8dp"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
-            android:text="@string/action_refresh"
-            android:textColor="@color/primary_green" />
     </LinearLayout>
 
     <!-- State 1: List State (When schedules exist) -->

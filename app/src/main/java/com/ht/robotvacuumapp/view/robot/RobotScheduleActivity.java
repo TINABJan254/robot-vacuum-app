@@ -29,7 +29,7 @@ public class RobotScheduleActivity extends AppCompatActivity {
     private ScheduleAdapter adapter;
     private RecyclerView list;
     private LinearLayoutManager manager;
-    private View listState, emptyState, addTop, addBottom, refresh, progress, retry, footer, moreProgress, moreRetry;
+    private View listState, emptyState, addTop, addBottom, progress, retry, footer, moreProgress, moreRetry;
     private TextView feedback, moreText;
     private boolean navigatingToLogin;
     private final ActivityResultLauncher<Intent> newScheduleLauncher = registerForActivityResult(
@@ -59,7 +59,6 @@ public class RobotScheduleActivity extends AppCompatActivity {
         emptyState = findViewById(R.id.layout_empty_state);
         addTop = findViewById(R.id.btn_top_add);
         addBottom = findViewById(R.id.btn_bottom_add);
-        refresh = findViewById(R.id.btn_refresh_schedules);
         progress = findViewById(R.id.schedule_progress);
         retry = findViewById(R.id.schedule_retry);
         feedback = findViewById(R.id.schedule_feedback);
@@ -81,7 +80,6 @@ public class RobotScheduleActivity extends AppCompatActivity {
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
         addTop.setOnClickListener(v -> openNewSchedule());
         addBottom.setOnClickListener(v -> openNewSchedule());
-        refresh.setOnClickListener(v -> viewModel.refresh());
         retry.setOnClickListener(v -> viewModel.refresh());
         moreRetry.setOnClickListener(v -> viewModel.loadNextPage());
         viewModel.getUiState().observe(this, this::render);
@@ -111,7 +109,6 @@ public class RobotScheduleActivity extends AppCompatActivity {
         addTop.setVisibility(hasItems ? View.VISIBLE : View.GONE);
         addTop.setEnabled(canAdd);
         addBottom.setEnabled(canAdd);
-        refresh.setEnabled(s.robotId != null && !s.isLoading);
         progress.setVisibility(s.isLoading ? View.VISIBLE : View.GONE);
         feedback.setText(s.listError != null ? s.listError : getString(R.string.schedule_loading));
         feedback.setVisibility(s.isLoading || s.listError != null ? View.VISIBLE : View.GONE);
