@@ -12,7 +12,7 @@
         android:id="@+id/top_bar"
         android:layout_width="0dp"
         android:layout_height="56dp"
-        android:paddingHorizontal="16dp"
+        android:paddingHorizontal="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -20,11 +20,10 @@
         <!-- Back Button -->
         <ImageView
             android:id="@+id/btn_back"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            style="@style/Widget.Robot.TopBarIcon"
+            android:layout_width="@dimen/top_bar_icon_size"
+            android:layout_height="@dimen/top_bar_icon_size"
             android:contentDescription="@null"
-            android:padding="8dp"
             android:src="@drawable/ic_arrow_back"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -33,12 +32,10 @@
         <!-- Screen Title -->
         <TextView
             android:id="@+id/tv_title"
+            style="@style/Widget.Robot.TopBarTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/title_settings"
-            android:textColor="@color/text_title"
-            android:textSize="18sp"
-            android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -267,9 +264,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="20dp"
-                android:background="@drawable/bg_card_settings_group"
+                android:background="@drawable/bg_card_danger_outline"
                 android:clickable="true"
-                android:elevation="1dp"
+                android:elevation="0dp"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground">
 

@@ -7,13 +7,23 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import com.ht.robotvacuumapp.model.repository.AuthRepository;
 import com.ht.robotvacuumapp.model.repository.RobotRepository;
+import com.ht.robotvacuumapp.model.repository.TelemetryStream;
 import com.ht.robotvacuumapp.model.entity.RobotCommand;
 import com.ht.robotvacuumapp.api.dto.RobotCommandResponse;
 import com.ht.robotvacuumapp.model.entity.RobotTelemetry;
 import java.util.Map;
 
+/**
+ * Robot control screen.
+ * <ul>
+ *   <li>Telemetry is pushed by the backend over WebSocket ({@link TelemetryStream}); no polling.</li>
+ *   <li>D-pad is hold-to-move: while a direction is held, MOVE is re-sent every {@link #MOVE_REPEAT_MS};
+ *   releasing sends STOP_MOVEMENT. The firmware stops by itself if MOVE is not repeated in time.</li>
+ * </ul>
+ */
 public class RobotControlViewModel extends ViewModel {
-    public static final long POLL_INTERVAL_MS = 5_000;
+    /** Re-send interval while a D-pad direction is held. Must stay well below the firmware timeout (800 ms). */
+    public static final long MOVE_REPEAT_MS = 250;
 
     public interface Scheduler {
         void postDelayed(Runnable task, long delayMillis);
@@ -26,28 +36,68 @@ public class RobotControlViewModel extends ViewModel {
         @Override public void remove(Runnable task) { handler.removeCallbacks(task); }
     }
 
-    private final RobotRepository robots;
+    private final TelemetryStream telemetryStream;
     private final RobotRepository commands;
     private final AuthRepository auth;
     private final Scheduler scheduler;
     private final Long id;
     private final MutableLiveData<RobotControlUiState> state;
-    private final Runnable poll = this::loadTelemetry;
     private boolean active;
-    private boolean pollingAllowed;
     private boolean cleared;
-    private long operation;
     private long commandOperation;
 
-    public RobotControlViewModel(String robotId, String name, RobotRepository robots,
+    // Hold-to-move state.
+    private final Runnable repeatMove = this::moveTick;
+    private RobotCommand.Direction holdDirection;
+    private RobotCommand.Direction lastSentDirection;
+    private boolean moveInFlight;
+    private boolean stopAfterMove;
+    private boolean holdErrorShown;
+
+    private final TelemetryStream.Listener telemetryListener = new TelemetryStream.Listener() {
+        @Override public void onTelemetry(RobotTelemetry snapshot) {
+            if (!active || !canRead()) return;
+            RobotControlUiState.Builder b = state.getValue().toBuilder();
+            b.telemetry = snapshot; // null: the backend has no reading yet.
+            b.telemetryLoaded = true;
+            b.isLoading = false;
+            b.telemetryError = null;
+            b.live = true;
+            state.setValue(b.build());
+        }
+
+        @Override public void onConnectionLost(String message) {
+            if (!active || !canRead()) return;
+            RobotControlUiState.Builder b = state.getValue().toBuilder();
+            b.isLoading = false;
+            b.live = false;
+            b.telemetryError = message; // Last snapshot stays visible while reconnecting.
+            state.setValue(b.build());
+        }
+
+        @Override public void onUnauthorized() {
+            if (cleared) return;
+            expireSession("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        }
+
+        @Override public void onRejected(int httpStatus, String message) {
+            if (!canRead()) return;
+            RobotControlUiState.Builder b = state.getValue().toBuilder();
+            b.isLoading = false;
+            b.live = false;
+            b.telemetryError = message;
+            state.setValue(b.build());
+        }
+    };
+
+    public RobotControlViewModel(String robotId, String name, TelemetryStream telemetryStream,
                                  RobotRepository commands, AuthRepository auth) {
-        this(robotId, name, robots, commands, auth, new MainScheduler());
+        this(robotId, name, telemetryStream, commands, auth, new MainScheduler());
     }
 
-    public RobotControlViewModel(String robotId, String name, RobotRepository robots,
+    public RobotControlViewModel(String robotId, String name, TelemetryStream telemetryStream,
                                  RobotRepository commands, AuthRepository auth, Scheduler scheduler) {
-        this.robots = robots;
-        if (robots == commands) throw new IllegalArgumentException("Telemetry and commands must own separate requests");
+        this.telemetryStream = telemetryStream;
         this.commands = commands;
         this.auth = auth;
         this.scheduler = scheduler;
@@ -71,35 +121,39 @@ public class RobotControlViewModel extends ViewModel {
 
     public LiveData<RobotControlUiState> getUiState() { return state; }
 
+    // ------------------------------------------------------------------
+    //  Telemetry (WebSocket)
+    // ------------------------------------------------------------------
+
     public void startTelemetry() {
         if (active || !canRead()) return;
         active = true;
-        pollingAllowed = true;
-        loadTelemetry();
+        openStream();
     }
 
     public void stopTelemetry() {
-        cancelPolling();
-        if (state.getValue().isLoading) {
-            RobotControlUiState.Builder b = state.getValue().toBuilder();
+        active = false;
+        telemetryStream.stop();
+        RobotControlUiState s = state.getValue();
+        if (s.isLoading || s.live) {
+            RobotControlUiState.Builder b = s.toBuilder();
             b.isLoading = false;
+            b.live = false;
             state.setValue(b.build());
         }
     }
 
-    private void cancelPolling() {
-        active = false;
-        pollingAllowed = false;
-        ++operation;
-        scheduler.remove(poll);
-        robots.cancelPendingRequests();
-    }
-
+    /** Re-opens the stream after it was rejected (e.g. a transient 403/404 during re-pairing). */
     public void retryTelemetry() {
         if (!active || !canRead() || state.getValue().isLoading) return;
-        pollingAllowed = true;
-        scheduler.remove(poll);
-        loadTelemetry();
+        openStream();
+    }
+
+    private void openStream() {
+        RobotControlUiState.Builder b = state.getValue().toBuilder();
+        b.isLoading = true;
+        state.setValue(b.build());
+        telemetryStream.start(id, telemetryListener);
     }
 
     private boolean canRead() {
@@ -107,63 +161,26 @@ public class RobotControlViewModel extends ViewModel {
         return !cleared && id != null && !s.robotUnpaired && !s.requiresLogin;
     }
 
-    private void loadTelemetry() {
-        if (!active || !pollingAllowed || !canRead() || state.getValue().isLoading) return;
-        long current = ++operation;
-        RobotControlUiState.Builder loading = state.getValue().toBuilder();
-        loading.isLoading = true;
-        // Keep the last error visible until a successful read, including while retrying.
-        state.setValue(loading.build());
-        robots.getTelemetry(id, new RobotRepository.Callback<RobotRepository.TelemetryResult>() {
-            @Override public void onSuccess(RobotRepository.TelemetryResult result) {
-                if (!isCurrent(current)) return;
-                RobotControlUiState.Builder b = state.getValue().toBuilder();
-                b.telemetry = result.snapshot; // HTTP 204 explicitly clears the previous snapshot.
-                b.telemetryLoaded = true;
-                b.isLoading = false;
-                b.telemetryError = null;
-                state.setValue(b.build());
-                scheduleNext();
-            }
-            @Override public void onError(int status, String message, Map<String, String> fields) {
-                if (!isCurrent(current)) return;
-                if (status == 401) {
-                    expireSession(message);
-                    return;
-                }
-                if (status == 400 || status == 403 || status == 404) pollingAllowed = false;
-                RobotControlUiState.Builder b = state.getValue().toBuilder();
-                b.isLoading = false;
-                b.telemetryError = message;
-                state.setValue(b.build());
-                scheduleNext();
-            }
-        });
-    }
-
-    private boolean isCurrent(long current) {
-        return active && canRead() && current == operation;
-    }
-
-    private void scheduleNext() {
-        scheduler.remove(poll);
-        if (active && pollingAllowed && canRead()) scheduler.postDelayed(poll, POLL_INTERVAL_MS);
-    }
-
     private void expireSession(String message) {
-        cancelPolling();
+        active = false;
+        telemetryStream.stop();
         cancelCommands();
         auth.cancelPendingRequests();
         auth.logout();
         RobotControlUiState.Builder b = state.getValue().toBuilder();
         b.telemetry = null;
         b.isLoading = false;
+        b.live = false;
         b.telemetryError = null;
         b.requiresLogin = true;
         clearCommandState(b);
         b.message = message;
         state.setValue(b.build());
     }
+
+    // ------------------------------------------------------------------
+    //  One-shot commands (start/stop, mode, dock)
+    // ------------------------------------------------------------------
 
     public void toggleWorking() {
         RobotTelemetry t = state.getValue().telemetry;
@@ -178,11 +195,6 @@ public class RobotControlViewModel extends ViewModel {
                 ? RobotTelemetry.Mode.MANUAL : RobotTelemetry.Mode.AUTO));
     }
 
-    public void move(RobotCommand.Direction direction) {
-        if (direction != null) sendCommand(RobotCommand.move(direction));
-    }
-
-    public void stopMovement() { sendCommand(RobotCommand.stopMovement()); }
     public void returnToDock() { sendCommand(RobotCommand.returnToDock()); }
 
     private void sendCommand(RobotCommand command) {
@@ -224,8 +236,125 @@ public class RobotControlViewModel extends ViewModel {
         return canRead() && current == commandOperation && state.getValue().isSendingCommand;
     }
 
+    // ------------------------------------------------------------------
+    //  D-pad: hold-to-move
+    // ------------------------------------------------------------------
+
+    /** Finger down on a direction (or slid to another one): move now and keep repeating. */
+    public void startMove(RobotCommand.Direction direction) {
+        if (direction == null || !canRead()) return;
+        if (direction == holdDirection) return;
+        holdDirection = direction;
+        holdErrorShown = false;
+        stopAfterMove = false;
+        scheduler.remove(repeatMove);
+        moveTick();
+    }
+
+    /** Finger up / cancelled / screen hidden: stop the wheels right away. No-op if nothing is held. */
+    public void stopMove() {
+        if (holdDirection == null) return;
+        holdDirection = null;
+        scheduler.remove(repeatMove);
+        sendStopMovement(false);
+    }
+
+    /** Finger lifted from one direction button; ignored if another direction has taken over (multi-touch). */
+    public void stopMove(RobotCommand.Direction released) {
+        if (released != null && released == holdDirection) stopMove();
+    }
+
+    /** Center button: explicit stop, never blocked by other pending commands. */
+    public void stopMovement() {
+        holdDirection = null;
+        scheduler.remove(repeatMove);
+        sendStopMovement(true);
+    }
+
+    public boolean isHoldingMove() { return holdDirection != null; }
+
+    private void moveTick() {
+        if (holdDirection == null) return;
+        if (!canRead()) {
+            holdDirection = null;
+            return;
+        }
+        // At most one MOVE in flight; a slow network skips ticks instead of queueing them.
+        if (!moveInFlight) sendMove(holdDirection);
+        scheduler.postDelayed(repeatMove, MOVE_REPEAT_MS);
+    }
+
+    private void sendMove(RobotCommand.Direction direction) {
+        moveInFlight = true;
+        lastSentDirection = direction;
+        commands.sendCommand(id, RobotCommand.move(direction), new RobotRepository.Callback<RobotCommandResponse>() {
+            @Override public void onSuccess(RobotCommandResponse response) { moveFinished(); }
+            @Override public void onError(int status, String message, Map<String, String> fields) {
+                moveInFlight = false;
+                if (cleared) return;
+                if (status == 401) {
+                    expireSession(message);
+                    return;
+                }
+                if (holdDirection != null && !holdErrorShown) {
+                    holdErrorShown = true; // One message per press, not one per repeat.
+                    showMessage(message);
+                }
+                moveFinished();
+            }
+        });
+    }
+
+    private void moveFinished() {
+        moveInFlight = false;
+        if (cleared || !canRead()) return;
+        if (stopAfterMove) {
+            // A MOVE answered after the release may have reached the robot after our STOP: stop again.
+            stopAfterMove = false;
+            sendStopMovement(false);
+        } else if (holdDirection != null && holdDirection != lastSentDirection) {
+            sendMove(holdDirection); // Direction changed while the previous MOVE was in flight.
+        }
+    }
+
+    private void sendStopMovement(boolean feedback) {
+        if (!canRead()) return;
+        if (moveInFlight) stopAfterMove = true;
+        commands.sendCommand(id, RobotCommand.stopMovement(), new RobotRepository.Callback<RobotCommandResponse>() {
+            @Override public void onSuccess(RobotCommandResponse response) {
+                if (!feedback || cleared || !canRead()) return;
+                RobotControlUiState.Builder b = state.getValue().toBuilder();
+                b.publishedCommand = RobotCommand.Action.STOP_MOVEMENT;
+                state.setValue(b.build());
+            }
+            @Override public void onError(int status, String message, Map<String, String> fields) {
+                if (cleared) return;
+                if (status == 401) {
+                    expireSession(message);
+                    return;
+                }
+                showMessage(message);
+            }
+        });
+    }
+
+    private void showMessage(String message) {
+        if (!canRead()) return;
+        RobotControlUiState.Builder b = state.getValue().toBuilder();
+        b.message = message;
+        state.setValue(b.build());
+    }
+
+    // ------------------------------------------------------------------
+    //  Shared
+    // ------------------------------------------------------------------
+
     private void cancelCommands() {
         ++commandOperation;
+        holdDirection = null;
+        moveInFlight = false;
+        stopAfterMove = false;
+        scheduler.remove(repeatMove);
         commands.cancelPendingRequests();
     }
 
@@ -255,12 +384,14 @@ public class RobotControlViewModel extends ViewModel {
     public void applyUnpairedRobot(String robotId) {
         RobotControlUiState s = state.getValue();
         if (cleared || s.requiresLogin || s.robotUnpaired || s.robotId == null || !s.robotId.equals(robotId)) return;
-        cancelPolling();
+        active = false;
+        telemetryStream.stop();
         cancelCommands();
         RobotControlUiState.Builder b = s.toBuilder();
         b.robotUnpaired = true;
         b.nameUpdated = false;
         b.isLoading = false;
+        b.live = false;
         b.telemetry = null;
         b.telemetryError = null;
         b.message = null;
@@ -270,7 +401,8 @@ public class RobotControlViewModel extends ViewModel {
 
     @Override protected void onCleared() {
         cleared = true;
-        cancelPolling();
+        active = false;
+        telemetryStream.stop();
         cancelCommands();
         auth.cancelPendingRequests();
     }

@@ -12,177 +12,169 @@
         android:id="@+id/main_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="28dp"
+        android:paddingStart="@dimen/auth_padding"
         android:paddingTop="36dp"
+        android:paddingEnd="@dimen/auth_padding"
         android:paddingBottom="24dp">
+
+        <!-- Brand mark (decorative) -->
+        <FrameLayout
+            android:id="@+id/layout_brand_logo"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_circle_soft_green"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_gravity="center"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_robot_card_circle_green" />
+        </FrameLayout>
 
         <!-- Title: Tạo tài khoản -->
         <TextView
             android:id="@+id/tv_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="18dp"
             android:text="@string/title_create_account"
             android:textColor="@color/text_title"
             android:textSize="26sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/layout_brand_logo" />
 
-        <!-- 1. Full Name Container -->
-        <LinearLayout
-            android:id="@+id/layout_full_name"
+        <TextView
+            android:id="@+id/tv_subtitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
-            android:orientation="vertical"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:text="@string/register_subtitle"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_title">
+            app:layout_constraintTop_toBottomOf="@id/tv_title" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingVertical="8dp">
+        <!-- 1. Full Name field -->
+        <LinearLayout
+            android:id="@+id/layout_full_name"
+            style="@style/Widget.Robot.InputContainer"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/input_height"
+            android:layout_marginTop="30dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_subtitle">
 
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_person_outline" />
+            <ImageView
+                style="@style/Widget.Robot.InputIcon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_person_outline" />
 
-                <EditText
-                    android:id="@+id/edt_full_name"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
-                    android:background="@null"
-                    android:hint="@string/hint_full_name"
-                    android:imeOptions="actionNext"
-                    android:inputType="textPersonName|textCapWords"
-                    android:maxLines="1"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_hint"
-                    android:textSize="15sp" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="6dp"
-                android:background="@color/divider_line" />
+            <EditText
+                android:id="@+id/edt_full_name"
+                style="@style/Widget.Robot.InputText"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:hint="@string/hint_full_name"
+                android:imeOptions="actionNext"
+                android:inputType="textPersonName|textCapWords" />
         </LinearLayout>
 
-        <!-- 2. Username Container -->
+        <!-- 2. Username field -->
         <LinearLayout
             android:id="@+id/layout_username"
+            style="@style/Widget.Robot.InputContainer"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:orientation="vertical"
+            android:layout_height="@dimen/input_height"
+            android:layout_marginTop="14dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/layout_full_name">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingVertical="8dp">
+            <ImageView
+                style="@style/Widget.Robot.InputIcon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_badge_outline" />
 
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_badge_outline" />
-
-                <EditText
-                    android:id="@+id/edt_username"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
-                    android:background="@null"
-                    android:hint="@string/hint_username"
-                    android:imeOptions="actionNext"
-                    android:inputType="text"
-                    android:maxLines="1"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_hint"
-                    android:textSize="15sp" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="6dp"
-                android:background="@color/divider_line" />
+            <EditText
+                android:id="@+id/edt_username"
+                style="@style/Widget.Robot.InputText"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:hint="@string/hint_username"
+                android:imeOptions="actionNext"
+                android:inputType="text" />
         </LinearLayout>
 
-        <!-- 3. Password Container -->
+        <!-- 3. Password field + strength meter -->
         <LinearLayout
             android:id="@+id/layout_password"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="14dp"
             android:orientation="vertical"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/layout_username">
 
             <LinearLayout
+                style="@style/Widget.Robot.InputContainer"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingVertical="8dp">
+                android:layout_height="@dimen/input_height">
 
                 <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    style="@style/Widget.Robot.InputIcon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:contentDescription="@null"
                     android:src="@drawable/ic_lock_outline" />
 
                 <EditText
                     android:id="@+id/edt_password"
+                    style="@style/Widget.Robot.InputText"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="12dp"
                     android:layout_weight="1"
-                    android:background="@null"
                     android:hint="@string/hint_password"
                     android:imeOptions="actionNext"
-                    android:inputType="textPassword"
-                    android:maxLines="1"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_hint"
-                    android:textSize="15sp" />
+                    android:inputType="textPassword" />
 
                 <ImageView
                     android:id="@+id/btn_toggle_password"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@null"
-                    android:padding="2dp"
+                    android:padding="5dp"
                     android:src="@drawable/ic_eye_outline" />
             </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="6dp"
-                android:background="@color/divider_line" />
 
             <!-- Password Strength Indicator (4 Bars) -->
             <LinearLayout
                 android:id="@+id/layout_strength_bars"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="4dp"
                 android:orientation="horizontal">
 
                 <View
@@ -222,82 +214,60 @@
                 android:id="@+id/tv_password_strength"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
                 android:layout_marginTop="6dp"
                 android:text="@string/password_strength"
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp" />
         </LinearLayout>
 
-        <!-- 4. Confirm Password Container -->
+        <!-- 4. Confirm Password field -->
         <LinearLayout
             android:id="@+id/layout_confirm_password"
+            style="@style/Widget.Robot.InputContainer"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:orientation="vertical"
+            android:layout_height="@dimen/input_height"
+            android:layout_marginTop="14dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/layout_password">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingVertical="8dp">
+            <ImageView
+                style="@style/Widget.Robot.InputIcon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_shield_check_outline" />
 
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_shield_check_outline" />
+            <EditText
+                android:id="@+id/edt_confirm_password"
+                style="@style/Widget.Robot.InputText"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:hint="@string/hint_confirm_password"
+                android:imeOptions="actionDone"
+                android:inputType="textPassword" />
 
-                <EditText
-                    android:id="@+id/edt_confirm_password"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
-                    android:layout_weight="1"
-                    android:background="@null"
-                    android:hint="@string/hint_confirm_password"
-                    android:imeOptions="actionDone"
-                    android:inputType="textPassword"
-                    android:maxLines="1"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_hint"
-                    android:textSize="15sp" />
-
-                <ImageView
-                    android:id="@+id/btn_toggle_confirm_password"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@null"
-                    android:padding="2dp"
-                    android:src="@drawable/ic_eye_outline" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="6dp"
-                android:background="@color/divider_line" />
+            <ImageView
+                android:id="@+id/btn_toggle_confirm_password"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@null"
+                android:padding="5dp"
+                android:src="@drawable/ic_eye_outline" />
         </LinearLayout>
 
         <!-- Register Button -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btn_register"
+            style="@style/Widget.Robot.PrimaryButton"
             android:layout_width="0dp"
-            android:layout_height="52dp"
-            android:layout_marginTop="36dp"
-            android:background="@drawable/bg_btn_register"
-            android:elevation="0dp"
-            android:stateListAnimator="@null"
+            android:layout_height="@dimen/button_height"
+            android:layout_marginTop="32dp"
             android:text="@string/btn_register"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/layout_confirm_password" />

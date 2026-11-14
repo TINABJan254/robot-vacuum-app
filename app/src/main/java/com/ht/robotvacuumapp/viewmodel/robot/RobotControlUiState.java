@@ -11,6 +11,8 @@ public final class RobotControlUiState {
     public final boolean isLoading;
     public final boolean telemetryLoaded;
     public final String telemetryError;
+    /** True while live telemetry is being received over the WebSocket. */
+    public final boolean live;
     public final boolean requiresLogin;
     public final String message;
     public final boolean nameUpdated;
@@ -26,6 +28,7 @@ public final class RobotControlUiState {
         isLoading = b.isLoading;
         telemetryLoaded = b.telemetryLoaded;
         telemetryError = b.telemetryError;
+        live = b.live;
         requiresLogin = b.requiresLogin;
         message = b.message;
         nameUpdated = b.nameUpdated;
@@ -44,6 +47,7 @@ public final class RobotControlUiState {
         boolean isLoading;
         boolean telemetryLoaded;
         String telemetryError;
+        boolean live;
         boolean requiresLogin;
         String message;
         boolean nameUpdated;
@@ -60,6 +64,7 @@ public final class RobotControlUiState {
             isLoading = s.isLoading;
             telemetryLoaded = s.telemetryLoaded;
             telemetryError = s.telemetryError;
+            live = s.live;
             requiresLogin = s.requiresLogin;
             message = s.message;
             nameUpdated = s.nameUpdated;

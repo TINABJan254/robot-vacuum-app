@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Circular top-bar icon button: soft white disc with bounded ripple. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/primary_green_ripple">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/surface" />
+        </shape>
+    </item>
+</ripple>

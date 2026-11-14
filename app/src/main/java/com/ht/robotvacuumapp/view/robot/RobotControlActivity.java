@@ -1,7 +1,9 @@
 package com.ht.robotvacuumapp.view.robot;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -24,6 +26,7 @@ import com.ht.robotvacuumapp.model.entity.RobotTelemetry;
 import com.ht.robotvacuumapp.model.entity.RobotCommand;
 import com.ht.robotvacuumapp.model.repository.AuthRepository;
 import com.ht.robotvacuumapp.model.repository.RobotRepository;
+import com.ht.robotvacuumapp.model.repository.WebSocketTelemetryStream;
 import com.ht.robotvacuumapp.view.auth.LoginActivity;
 import com.ht.robotvacuumapp.viewmodel.robot.RobotControlUiState;
 import com.ht.robotvacuumapp.viewmodel.robot.RobotControlViewModel;
@@ -89,7 +92,7 @@ public class RobotControlActivity extends AppCompatActivity {
                 return modelClass.cast(new RobotControlViewModel(
                         getIntent().getStringExtra(EXTRA_ROBOT_ID),
                         getIntent().getStringExtra(EXTRA_ROBOT_NAME),
-                        new RobotRepository(getApplicationContext()),
+                        new WebSocketTelemetryStream(getApplicationContext()),
                         new RobotRepository(getApplicationContext()),
                         new AuthRepository(getApplicationContext())));
             }
@@ -175,12 +178,50 @@ public class RobotControlActivity extends AppCompatActivity {
         }
     }
 
+    /** Accessibility (TalkBack double-tap) has no press/release: move briefly, then stop. */
+    private static final long ACCESSIBILITY_MOVE_PULSE_MS = 600;
+
     private void setupDpadControls() {
-        btnDpadUp.setOnClickListener(v -> viewModel.move(RobotCommand.Direction.FORWARD));
-        btnDpadDown.setOnClickListener(v -> viewModel.move(RobotCommand.Direction.BACKWARD));
-        btnDpadLeft.setOnClickListener(v -> viewModel.move(RobotCommand.Direction.LEFT));
-        btnDpadRight.setOnClickListener(v -> viewModel.move(RobotCommand.Direction.RIGHT));
+        bindHoldToMove(btnDpadUp, RobotCommand.Direction.FORWARD);
+        bindHoldToMove(btnDpadDown, RobotCommand.Direction.BACKWARD);
+        bindHoldToMove(btnDpadLeft, RobotCommand.Direction.LEFT);
+        bindHoldToMove(btnDpadRight, RobotCommand.Direction.RIGHT);
         btnDpadCenter.setOnClickListener(v -> viewModel.stopMovement());
+    }
+
+    // Touch is handled entirely here (press = move, release = stop); clicks only come from accessibility.
+    @SuppressLint("ClickableViewAccessibility")
+    private void bindHoldToMove(View button, RobotCommand.Direction direction) {
+        button.setOnTouchListener((v, event) -> {
+            switch (event.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                    v.setPressed(true);
+                    viewModel.startMove(direction);
+                    return true;
+                case MotionEvent.ACTION_MOVE:
+                    // Finger slid off the button: treat as release so the robot never keeps going unseen.
+                    if (!isInside(v, event) && v.isPressed()) {
+                        v.setPressed(false);
+                        viewModel.stopMove(direction);
+                    }
+                    return true;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    v.setPressed(false);
+                    viewModel.stopMove(direction);
+                    return true;
+                default:
+                    return true;
+            }
+        });
+        button.setOnClickListener(v -> {
+            viewModel.startMove(direction);
+            v.postDelayed(() -> viewModel.stopMove(direction), ACCESSIBILITY_MOVE_PULSE_MS);
+        });
+    }
+
+    private static boolean isInside(View v, MotionEvent event) {
+        return event.getX() >= 0 && event.getY() >= 0 && event.getX() <= v.getWidth() && event.getY() <= v.getHeight();
     }
 
     private void setupChargeAction() {
@@ -188,9 +229,15 @@ public class RobotControlActivity extends AppCompatActivity {
     }
 
     private void renderCommandControls(RobotControlUiState state) {
-        boolean enabled = state.robotId != null && !state.requiresLogin && !state.robotUnpaired && !state.isSendingCommand;
-        for (View control : new View[]{btnDpadUp, btnDpadDown, btnDpadLeft, btnDpadRight,
-                btnDpadCenter, btnPlayPause, btnCharge, btnToggleMode}) {
+        boolean available = state.robotId != null && !state.requiresLogin && !state.robotUnpaired;
+        // The D-pad is never disabled by a pending one-shot command: a disabled view stops receiving
+        // touch events, so the finger-up (STOP) would be lost while the robot is moving.
+        for (View control : new View[]{btnDpadUp, btnDpadDown, btnDpadLeft, btnDpadRight, btnDpadCenter}) {
+            control.setEnabled(available);
+            control.setAlpha(available ? 1f : 0.45f);
+        }
+        boolean enabled = available && !state.isSendingCommand;
+        for (View control : new View[]{btnPlayPause, btnCharge, btnToggleMode}) {
             boolean canUse = enabled && (control != btnToggleMode
                     || (state.telemetry != null && state.telemetry.mode != null));
             control.setEnabled(canUse);
@@ -227,6 +274,12 @@ public class RobotControlActivity extends AppCompatActivity {
             label = state.telemetryError != null ? state.telemetryError
                     : getString(state.isLoading || !state.telemetryLoaded
                     ? R.string.telemetry_loading : R.string.telemetry_no_data);
+        } else if (t.stale) {
+            // Backend pushes this when the robot stopped sending telemetry (> 30 s).
+            label = getString(R.string.telemetry_robot_offline);
+            color = R.color.color_danger;
+        } else if (!state.live && state.telemetryError != null) {
+            label = state.telemetryError; // Reconnecting: last snapshot may be outdated.
         } else {
             label = getString(statusLabel(t.status));
             if (t.status == RobotTelemetry.Status.ERROR) {
@@ -257,6 +310,9 @@ public class RobotControlActivity extends AppCompatActivity {
     }
 
     @Override protected void onStop() {
+        // Leaving the screen while a direction is held (no ACTION_UP will arrive): stop the wheels.
+        for (View button : new View[]{btnDpadUp, btnDpadDown, btnDpadLeft, btnDpadRight}) button.setPressed(false);
+        viewModel.stopMove();
         viewModel.stopTelemetry();
         super.onStop();
     }

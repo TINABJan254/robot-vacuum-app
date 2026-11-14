@@ -1,9 +1,110 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.RobotVacuumApp" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <!-- Brand palette lives in Theme.RobotVacuumApp so both day and night share it. -->
     </style>
 
-    <style name="Theme.RobotVacuumApp" parent="Base.Theme.RobotVacuumApp" />
+    <!--
+        App theme. Palette items are declared here (not in Base) so they apply on top of
+        whichever Base is resolved (values/ or values-night/). Layouts use a light, hard-coded
+        color scheme, so values-night keeps a light Base to avoid dark dialogs with dark text.
+    -->
+    <style name="Theme.RobotVacuumApp" parent="Base.Theme.RobotVacuumApp">
+        <item name="colorPrimary">@color/primary_green</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/primary_green_light</item>
+        <item name="colorOnPrimaryContainer">@color/primary_green_dark</item>
+        <item name="colorSecondary">@color/primary_green</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">@color/primary_green_soft</item>
+        <item name="colorOnSecondaryContainer">@color/primary_green_dark</item>
+        <item name="colorAccent">@color/primary_green</item>
+        <item name="colorControlActivated">@color/primary_green</item>
+        <item name="colorError">@color/color_danger</item>
+        <item name="colorOnError">@color/white</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/text_title</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        <item name="colorOutline">@color/outline_strong</item>
+        <item name="android:colorBackground">@color/white</item>
+        <item name="android:windowBackground">@color/white</item>
+    </style>
+
+    <!-- ===== Shared widget styles ===== -->
+    <style name="Widget.Robot" />
+
+    <!-- Circular icon button used in top bars (back / settings / add / bell). -->
+    <style name="Widget.Robot.TopBarIcon">
+        <item name="android:layout_width">@dimen/top_bar_icon_size</item>
+        <item name="android:layout_height">@dimen/top_bar_icon_size</item>
+        <item name="android:background">@drawable/bg_icon_button</item>
+        <item name="android:padding">9dp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="Widget.Robot.TopBarTitle">
+        <item name="android:textColor">@color/text_title</item>
+        <item name="android:textSize">@dimen/text_top_bar_title</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- Filled, rounded input row (icon + EditText [+ trailing icon]). Highlights on focus. -->
+    <style name="Widget.Robot.InputContainer">
+        <item name="android:layout_height">@dimen/input_height</item>
+        <item name="android:background">@drawable/bg_input_field</item>
+        <item name="android:addStatesFromChildren">true</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">14dp</item>
+    </style>
+
+    <style name="Widget.Robot.InputIcon">
+        <item name="android:layout_width">20dp</item>
+        <item name="android:layout_height">20dp</item>
+        <item name="tint">@color/icon_tint</item>
+    </style>
+
+    <style name="Widget.Robot.InputText">
+        <item name="android:background">@null</item>
+        <item name="android:gravity">center_vertical|start</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColorHint">@color/text_hint</item>
+        <item name="android:textSize">@dimen/text_body</item>
+    </style>
+
+    <!-- Full-width primary (brand green) pill button. -->
+    <style name="Widget.Robot.PrimaryButton">
+        <item name="android:background">@drawable/bg_btn_register</item>
+        <item name="android:elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Small pill-shaped text action (Làm mới / Thử lại ...). -->
+    <style name="Widget.Robot.ChipAction">
+        <item name="android:background">@drawable/bg_chip_action</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">32dp</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:textColor">@color/primary_green</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- White rounded card container with hairline outline. -->
+    <style name="Widget.Robot.Card">
+        <item name="android:background">@drawable/bg_card_settings_group</item>
+        <item name="android:elevation">@dimen/card_elevation</item>
+    </style>
 </resources>

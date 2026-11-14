@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <solid android:color="@color/btn_primary_blue" />
-    <corners android:radius="28dp" />
-</shape>
+<!-- Primary brand pill button with ripple and a muted disabled state. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/on_primary_ripple">
+    <item>
+        <selector>
+            <item android:state_enabled="false">
+                <shape android:shape="rectangle">
+                    <corners android:radius="@dimen/radius_pill" />
+                    <solid android:color="@color/primary_disabled" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="@dimen/radius_pill" />
+                    <solid android:color="@color/primary_green" />
+                </shape>
+            </item>
+        </selector>
+    </item>
+</ripple>

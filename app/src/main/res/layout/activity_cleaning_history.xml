@@ -12,7 +12,7 @@
         android:id="@+id/top_bar"
         android:layout_width="0dp"
         android:layout_height="56dp"
-        android:paddingHorizontal="16dp"
+        android:paddingHorizontal="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -20,11 +20,10 @@
         <!-- Back Button (Màu đen đồng bộ) -->
         <ImageView
             android:id="@+id/btn_back"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            style="@style/Widget.Robot.TopBarIcon"
+            android:layout_width="@dimen/top_bar_icon_size"
+            android:layout_height="@dimen/top_bar_icon_size"
             android:contentDescription="@null"
-            android:padding="8dp"
             android:src="@drawable/ic_arrow_back"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -33,12 +32,10 @@
         <!-- Screen Title -->
         <TextView
             android:id="@+id/tv_title"
+            style="@style/Widget.Robot.TopBarTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/title_cleaning_history"
-            android:textColor="@color/text_title"
-            android:textSize="18sp"
-            android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -78,7 +75,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="198"
-                android:textColor="@color/btn_primary_blue"
+                android:textColor="@color/primary_green"
                 android:textSize="28sp"
                 android:textStyle="bold"
                 tools:text="198" />
@@ -111,7 +108,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="194"
-                    android:textColor="@color/btn_primary_blue"
+                    android:textColor="@color/primary_green"
                     android:textSize="28sp"
                     android:textStyle="bold"
                     tools:text="194" />
@@ -122,7 +119,7 @@
                     android:layout_marginStart="1dp"
                     android:layout_marginBottom="3dp"
                     android:text="h"
-                    android:textColor="@color/btn_primary_blue"
+                    android:textColor="@color/primary_green"
                     android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>

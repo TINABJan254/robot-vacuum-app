@@ -1,10 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Primary brand pill button with ripple and a muted disabled state. -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="@color/primary_green_dark">
+    android:color="@color/on_primary_ripple">
     <item>
-        <shape android:shape="rectangle">
-            <corners android:radius="28dp" />
-            <solid android:color="@color/primary_green" />
-        </shape>
+        <selector>
+            <item android:state_enabled="false">
+                <shape android:shape="rectangle">
+                    <corners android:radius="@dimen/radius_pill" />
+                    <solid android:color="@color/primary_disabled" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="@dimen/radius_pill" />
+                    <solid android:color="@color/primary_green" />
+                </shape>
+            </item>
+        </selector>
     </item>
 </ripple>

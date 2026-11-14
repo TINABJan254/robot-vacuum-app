@@ -17,9 +17,9 @@
     <EditText
         android:id="@+id/edt_new_robot_name"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="50dp"
         android:layout_marginTop="12dp"
-        android:background="@drawable/bg_dialog"
+        android:background="@drawable/bg_input_field"
         android:hint="@string/dialog_edit_robot_name_hint"
         android:imeOptions="actionDone"
         android:inputType="textCapWords"

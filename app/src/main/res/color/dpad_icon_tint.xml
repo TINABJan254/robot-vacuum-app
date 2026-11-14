@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Arrow tint for D-pad buttons: white while held (pressed/activated/selected), slate otherwise. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/white" android:state_pressed="true" />
+    <item android:color="@color/white" android:state_activated="true" />
+    <item android:color="@color/white" android:state_selected="true" />
+    <item android:color="@color/dpad_icon" />
+</selector>

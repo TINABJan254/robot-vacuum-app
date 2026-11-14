@@ -12,7 +12,7 @@
         android:id="@+id/top_bar"
         android:layout_width="0dp"
         android:layout_height="56dp"
-        android:paddingHorizontal="16dp"
+        android:paddingHorizontal="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -20,11 +20,10 @@
         <!-- Back Button (Màu đen đồng bộ) -->
         <ImageView
             android:id="@+id/btn_back"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            style="@style/Widget.Robot.TopBarIcon"
+            android:layout_width="@dimen/top_bar_icon_size"
+            android:layout_height="@dimen/top_bar_icon_size"
             android:contentDescription="@null"
-            android:padding="8dp"
             android:src="@drawable/ic_arrow_back"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -33,27 +32,20 @@
         <!-- Title: Thông báo -->
         <TextView
             android:id="@+id/tv_title"
+            style="@style/Widget.Robot.TopBarTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/title_notification"
-            android:textColor="@color/text_title"
-            android:textSize="18sp"
-            android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
         <TextView
             android:id="@+id/btn_refresh_notifications"
+            style="@style/Widget.Robot.ChipAction"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:paddingHorizontal="8dp"
-            android:gravity="center"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
+            android:layout_height="wrap_content"
             android:text="@string/action_refresh"
-            android:textColor="@color/primary_green"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />

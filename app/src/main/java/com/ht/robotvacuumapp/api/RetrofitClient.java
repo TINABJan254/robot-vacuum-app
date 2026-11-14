@@ -9,6 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public final class RetrofitClient {
     private static Retrofit retrofit;
+    private static OkHttpClient httpClient;
 
     private RetrofitClient() { }
 
@@ -16,20 +17,27 @@ public final class RetrofitClient {
         retrofit = null;
     }
 
-    public static synchronized Retrofit getRetrofitInstance(Context context) {
-        if (retrofit == null) {
+    /** One connection pool / dispatcher shared by REST (Retrofit) and the telemetry WebSocket. */
+    public static synchronized OkHttpClient getHttpClient() {
+        if (httpClient == null) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
-            OkHttpClient client = new OkHttpClient.Builder()
+            httpClient = new OkHttpClient.Builder()
                     .retryOnConnectionFailure(false)
                     .connectTimeout(15, TimeUnit.SECONDS)
                     .readTimeout(15, TimeUnit.SECONDS)
                     .writeTimeout(15, TimeUnit.SECONDS)
                     .addInterceptor(logging)
                     .build();
+        }
+        return httpClient;
+    }
+
+    public static synchronized Retrofit getRetrofitInstance(Context context) {
+        if (retrofit == null) {
             retrofit = new Retrofit.Builder()
                     .baseUrl(ApiConfig.getBaseUrl(context.getApplicationContext()))
-                    .client(client)
+                    .client(getHttpClient())
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
         }

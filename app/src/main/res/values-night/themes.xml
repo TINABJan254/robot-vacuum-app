@@ -1,7 +1,9 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.RobotVacuumApp" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
-    </style>
+    <!--
+        Night base theme. All screens use a hard-coded light palette (white surfaces, dark text),
+        so the night configuration intentionally stays on a light Material3 base. This keeps
+        AlertDialogs / BottomSheets light so their dark text remains readable in dark mode.
+        Brand colors are applied in Theme.RobotVacuumApp (values/themes.xml) for both modes.
+    -->
+    <style name="Base.Theme.RobotVacuumApp" parent="Theme.Material3.Light.NoActionBar" />
 </resources>

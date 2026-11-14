@@ -90,6 +90,7 @@
     <string name="telemetry_mode_manual">Manual</string>
     <string name="telemetry_loading">Đang tải…</string>
     <string name="telemetry_no_data">Chưa có dữ liệu</string>
+    <string name="telemetry_robot_offline">Robot mất kết nối</string>
     <string name="telemetry_status_idle">Chờ</string>
     <string name="telemetry_status_working">Đang dọn dẹp</string>
     <string name="telemetry_status_returning">Đang về trạm</string>
@@ -149,4 +150,8 @@
     <string-array name="schedule_day_names">
         <item>T2</item><item>T3</item><item>T4</item><item>T5</item><item>T6</item><item>T7</item><item>CN</item>
     </string-array>
+    <!-- UI refresh: decorative subtitles on auth screens -->
+    <string name="login_subtitle">Chào mừng bạn quay lại! Đăng nhập để điều khiển robot của bạn.</string>
+    <string name="register_subtitle">Tạo tài khoản để bắt đầu quản lý robot hút bụi.</string>
+    <string name="control_status_caption">Trạng thái</string>
 </resources>

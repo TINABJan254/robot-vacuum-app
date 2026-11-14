@@ -34,4 +34,21 @@
     <color name="strength_fair">#F97316</color>
     <color name="strength_good">#EAB308</color>
     <color name="strength_strong">#165030</color>
+
+    <!-- Refreshed palette: shared surfaces, outlines and interaction states -->
+    <color name="app_background">#F4F6F9</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_muted">#F1F5F9</color>
+    <color name="input_fill">#F5F7FA</color>
+    <color name="outline">#E6EBF2</color>
+    <color name="outline_strong">#CBD5E1</color>
+    <color name="primary_green_soft">#DCEDE3</color>
+    <color name="primary_green_tint">#F3F9F5</color>
+    <color name="primary_green_ripple">#33165030</color>
+    <color name="on_primary_ripple">#40FFFFFF</color>
+    <color name="primary_disabled">#9DB5A7</color>
+    <color name="danger_soft">#FDECEC</color>
+    <color name="danger_outline">#F6C9C7</color>
+    <color name="dpad_icon">#334155</color>
+    <color name="dpad_center_dot">#64748B</color>
 </resources>
