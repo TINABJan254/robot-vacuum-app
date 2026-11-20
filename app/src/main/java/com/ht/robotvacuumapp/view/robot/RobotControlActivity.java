@@ -1,9 +1,7 @@
 package com.ht.robotvacuumapp.view.robot;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -46,7 +44,7 @@ public class RobotControlActivity extends AppCompatActivity {
     private TextView tvStatus;
     private View statusUnderline;
 
-    // D-Pad
+    private JoystickLayout joystick;
     private ImageView btnDpadUp;
     private ImageView btnDpadDown;
     private ImageView btnDpadLeft;
@@ -113,6 +111,7 @@ public class RobotControlActivity extends AppCompatActivity {
         tvStatus = findViewById(R.id.tv_status);
         statusUnderline = findViewById(R.id.status_underline);
 
+        joystick = findViewById(R.id.layout_dpad);
         btnDpadUp = findViewById(R.id.btn_dpad_up);
         btnDpadDown = findViewById(R.id.btn_dpad_down);
         btnDpadLeft = findViewById(R.id.btn_dpad_left);
@@ -182,46 +181,37 @@ public class RobotControlActivity extends AppCompatActivity {
     private static final long ACCESSIBILITY_MOVE_PULSE_MS = 600;
 
     private void setupDpadControls() {
-        bindHoldToMove(btnDpadUp, RobotCommand.Direction.FORWARD);
-        bindHoldToMove(btnDpadDown, RobotCommand.Direction.BACKWARD);
-        bindHoldToMove(btnDpadLeft, RobotCommand.Direction.LEFT);
-        bindHoldToMove(btnDpadRight, RobotCommand.Direction.RIGHT);
+        // Real-time swipe: every direction change while dragging is sent immediately; the ViewModel
+        // keeps re-sending MOVE while held and sends STOP_MOVEMENT when the finger returns/lifts.
+        joystick.setKnob(btnDpadCenter);
+        joystick.setListener(new JoystickLayout.Listener() {
+            @Override public void onDirectionChanged(RobotCommand.Direction direction) {
+                highlightDirection(direction);
+                if (direction == null) viewModel.stopMove();
+                else viewModel.startMove(direction);
+            }
+            @Override public void onKnobTap() { viewModel.stopMovement(); }
+        });
+        // Touch never reaches these children (the joystick intercepts it); clicks come only from accessibility.
+        bindAccessibilityMove(btnDpadUp, RobotCommand.Direction.FORWARD);
+        bindAccessibilityMove(btnDpadDown, RobotCommand.Direction.BACKWARD);
+        bindAccessibilityMove(btnDpadLeft, RobotCommand.Direction.LEFT);
+        bindAccessibilityMove(btnDpadRight, RobotCommand.Direction.RIGHT);
         btnDpadCenter.setOnClickListener(v -> viewModel.stopMovement());
     }
 
-    // Touch is handled entirely here (press = move, release = stop); clicks only come from accessibility.
-    @SuppressLint("ClickableViewAccessibility")
-    private void bindHoldToMove(View button, RobotCommand.Direction direction) {
-        button.setOnTouchListener((v, event) -> {
-            switch (event.getActionMasked()) {
-                case MotionEvent.ACTION_DOWN:
-                    v.setPressed(true);
-                    viewModel.startMove(direction);
-                    return true;
-                case MotionEvent.ACTION_MOVE:
-                    // Finger slid off the button: treat as release so the robot never keeps going unseen.
-                    if (!isInside(v, event) && v.isPressed()) {
-                        v.setPressed(false);
-                        viewModel.stopMove(direction);
-                    }
-                    return true;
-                case MotionEvent.ACTION_UP:
-                case MotionEvent.ACTION_CANCEL:
-                    v.setPressed(false);
-                    viewModel.stopMove(direction);
-                    return true;
-                default:
-                    return true;
-            }
-        });
+    private void bindAccessibilityMove(View button, RobotCommand.Direction direction) {
         button.setOnClickListener(v -> {
             viewModel.startMove(direction);
             v.postDelayed(() -> viewModel.stopMove(direction), ACCESSIBILITY_MOVE_PULSE_MS);
         });
     }
 
-    private static boolean isInside(View v, MotionEvent event) {
-        return event.getX() >= 0 && event.getY() >= 0 && event.getX() <= v.getWidth() && event.getY() <= v.getHeight();
+    private void highlightDirection(RobotCommand.Direction direction) {
+        btnDpadUp.setPressed(direction == RobotCommand.Direction.FORWARD);
+        btnDpadDown.setPressed(direction == RobotCommand.Direction.BACKWARD);
+        btnDpadLeft.setPressed(direction == RobotCommand.Direction.LEFT);
+        btnDpadRight.setPressed(direction == RobotCommand.Direction.RIGHT);
     }
 
     private void setupChargeAction() {
@@ -230,8 +220,8 @@ public class RobotControlActivity extends AppCompatActivity {
 
     private void renderCommandControls(RobotControlUiState state) {
         boolean available = state.robotId != null && !state.requiresLogin && !state.robotUnpaired;
-        // The D-pad is never disabled by a pending one-shot command: a disabled view stops receiving
-        // touch events, so the finger-up (STOP) would be lost while the robot is moving.
+
+        joystick.setEnabled(available);
         for (View control : new View[]{btnDpadUp, btnDpadDown, btnDpadLeft, btnDpadRight, btnDpadCenter}) {
             control.setEnabled(available);
             control.setAlpha(available ? 1f : 0.45f);
@@ -311,7 +301,8 @@ public class RobotControlActivity extends AppCompatActivity {
 
     @Override protected void onStop() {
         // Leaving the screen while a direction is held (no ACTION_UP will arrive): stop the wheels.
-        for (View button : new View[]{btnDpadUp, btnDpadDown, btnDpadLeft, btnDpadRight}) button.setPressed(false);
+        joystick.reset();
+        highlightDirection(null);
         viewModel.stopMove();
         viewModel.stopTelemetry();
         super.onStop();

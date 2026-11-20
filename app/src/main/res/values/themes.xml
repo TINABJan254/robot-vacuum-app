@@ -31,7 +31,7 @@
     </style>
 
     <!-- ===== Shared widget styles ===== -->
-    <style name="Widget.Robot" />
+    <style name="Widget.Robot" parent=""/>
 
     <!-- Circular icon button used in top bars (back / settings / add / bell). -->
     <style name="Widget.Robot.TopBarIcon">

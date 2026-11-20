@@ -154,8 +154,8 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Center D-Pad Joystick -->
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- Center swipe joystick: drag anywhere on the pad, the knob follows the finger -->
+    <com.ht.robotvacuumapp.view.robot.JoystickLayout
         android:id="@+id/layout_dpad"
         android:layout_width="260dp"
         android:layout_height="260dp"
@@ -240,6 +240,7 @@
             android:id="@+id/btn_dpad_center"
             android:layout_width="80dp"
             android:layout_height="80dp"
+            android:elevation="4dp"
             android:background="@drawable/bg_dpad_center"
             android:clickable="true"
             android:focusable="true"
@@ -257,7 +258,7 @@
                 android:duplicateParentState="true" />
         </FrameLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.ht.robotvacuumapp.view.robot.JoystickLayout>
 
     <!-- Bottom Action Bar (Auto/Manual - Play/Pause - Sạc) -->
     <androidx.constraintlayout.widget.ConstraintLayout
