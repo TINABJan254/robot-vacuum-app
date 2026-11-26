@@ -48,7 +48,7 @@ public final class MainUiState {
     static final class Builder {
         List<RobotDevice> robots = Collections.emptyList();
         String selectedRobotId;
-        int selectedTab = 1;
+        int selectedTab = 0;
         boolean requiresLogin;
         boolean isLoadingRobots;
         boolean robotsLoaded;

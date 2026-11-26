@@ -1,6 +1,7 @@
 package com.ht.robotvacuumapp.view.robot;
 
 import android.content.Context;
+import android.graphics.Rect;
 import android.view.*;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -44,8 +45,7 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.Schedu
         ScheduleItem item = items.get(position);
         holder.time.setText(item.getTime());
         holder.repeat.setText(repeatLabel(holder.itemView.getContext(), item.getDays()));
-        holder.layoutCardForeground.animate().cancel();
-        holder.layoutCardForeground.setTranslationX(0f);
+        holder.resetSwipe();
         holder.layoutCardForeground.setEnabled(!item.isBusy());
         holder.layoutCardForeground.setAlpha(item.isBusy() ? 0.6f : 1f);
         holder.btnDeleteLeft.setEnabled(!item.isBusy()); holder.btnDeleteRight.setEnabled(!item.isBusy());
@@ -59,12 +59,16 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.Schedu
         View.OnClickListener delete = v -> {
             int current = holder.getBindingAdapterPosition();
             if (current != RecyclerView.NO_POSITION && !items.get(current).isBusy()) {
-                holder.layoutCardForeground.animate().translationX(0f).setDuration(150).start();
+                holder.animateCardTo(0f, 150);
                 listener.onDelete(items.get(current).getId());
             }
         };
         holder.btnDeleteLeft.setOnClickListener(delete); holder.btnDeleteRight.setOnClickListener(delete);
         setupSwipeGesture(holder);
+    }
+    @Override public void onViewRecycled(@NonNull ScheduleViewHolder holder) {
+        holder.resetSwipe();
+        super.onViewRecycled(holder);
     }
     private String repeatLabel(Context context, List<Integer> days) {
         if (days.isEmpty()) return context.getString(R.string.schedule_no_repeat_days);
@@ -93,6 +97,7 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.Schedu
                 if (!v.isEnabled()) return false;
                 switch (event.getActionMasked()) {
                     case MotionEvent.ACTION_DOWN:
+                        v.animate().cancel();
                         startX = event.getRawX();
                         startY = event.getRawY();
                         initialTransX = v.getTranslationX();
@@ -115,6 +120,7 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.Schedu
                             if (targetX < -maxSwipePx) targetX = -maxSwipePx;
                             if (targetX > maxSwipePx) targetX = maxSwipePx;
                             v.setTranslationX(targetX);
+                            holder.updateDeleteBackground();
                             return true;
                         }
                         return false;
@@ -128,17 +134,17 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.Schedu
                         if (isSwiping) {
                             float currentX = v.getTranslationX();
                             if (currentX < -maxSwipePx / 3f) {
-                                v.animate().translationX(-maxSwipePx).setDuration(200).start();
+                                holder.animateCardTo(-maxSwipePx, 200);
                             } else if (currentX > maxSwipePx / 3f) {
-                                v.animate().translationX(maxSwipePx).setDuration(200).start();
+                                holder.animateCardTo(maxSwipePx, 200);
                             } else {
-                                v.animate().translationX(0f).setDuration(200).start();
+                                holder.animateCardTo(0f, 200);
                             }
                             isSwiping = false;
                             return true;
                         } else if (Math.abs(v.getTranslationX()) > 5f) {
                             // If tapped while open, close it
-                            v.animate().translationX(0f).setDuration(200).start();
+                            holder.animateCardTo(0f, 200);
                             return true;
                         }
                         return false;
@@ -151,15 +157,55 @@ public class ScheduleAdapter extends RecyclerView.Adapter<ScheduleAdapter.Schedu
 
     @Override public int getItemCount() { return items.size(); }
     static class ScheduleViewHolder extends RecyclerView.ViewHolder {
-        final View layoutCardForeground, btnDeleteLeft, btnDeleteRight;
+        final View layoutCardForeground, layoutDeleteBackground, btnDeleteLeft, btnDeleteRight;
+        private final Rect deleteClip = new Rect();
         final TextView time, repeat;
         final SwitchCompat toggle;
         ScheduleViewHolder(@NonNull View view) {
             super(view);
             layoutCardForeground = view.findViewById(R.id.layout_card_foreground);
+            layoutDeleteBackground = view.findViewById(R.id.layout_delete_background);
             btnDeleteLeft = view.findViewById(R.id.btn_delete_schedule_left); btnDeleteRight = view.findViewById(R.id.btn_delete_schedule_right);
             time = view.findViewById(R.id.tv_schedule_time); repeat = view.findViewById(R.id.tv_schedule_repeat);
             toggle = view.findViewById(R.id.switch_schedule);
+        }
+
+        void resetSwipe() {
+            layoutCardForeground.animate().cancel();
+            layoutCardForeground.animate().setUpdateListener(null);
+            layoutCardForeground.setTranslationX(0f);
+            updateDeleteBackground();
+        }
+
+        void animateCardTo(float translationX, long duration) {
+            layoutCardForeground.animate().cancel();
+            layoutCardForeground.animate()
+                    .translationX(translationX)
+                    .setDuration(duration)
+                    .setUpdateListener(animation -> updateDeleteBackground())
+                    .withEndAction(this::updateDeleteBackground)
+                    .start();
+        }
+
+        void updateDeleteBackground() {
+            float offset = layoutCardForeground.getTranslationX();
+            if (offset == 0f) {
+                layoutDeleteBackground.setVisibility(View.INVISIBLE);
+                return;
+            }
+
+            // Draw red only in the revealed strip, never beneath the rounded white card.
+            int width = layoutDeleteBackground.getWidth();
+            int height = layoutDeleteBackground.getHeight();
+            if (offset > 0f) {
+                deleteClip.set(0, 0, Math.min(width, (int) Math.ceil(offset)), height);
+            } else {
+                deleteClip.set(Math.max(0, width + (int) Math.floor(offset)), 0, width, height);
+            }
+            layoutDeleteBackground.setClipBounds(deleteClip);
+            btnDeleteLeft.setVisibility(offset > 0f ? View.VISIBLE : View.INVISIBLE);
+            btnDeleteRight.setVisibility(offset < 0f ? View.VISIBLE : View.INVISIBLE);
+            layoutDeleteBackground.setVisibility(View.VISIBLE);
         }
     }
 }

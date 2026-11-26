@@ -32,8 +32,6 @@ public class DeviceInfoActivity extends AppCompatActivity {
     private TextView tvDeviceName;
     private TextView tvDeviceId;
     private TextView tvDeviceCode;
-    private TextView tvDeviceSerial;
-    private View rowServiceHistory;
     private View feedback, progress, retry;
     private TextView tvFeedback;
     private DeviceInfoViewModel viewModel;
@@ -68,13 +66,10 @@ public class DeviceInfoActivity extends AppCompatActivity {
         tvDeviceName = findViewById(R.id.tv_device_name);
         tvDeviceId = findViewById(R.id.tv_device_id);
         tvDeviceCode = findViewById(R.id.tv_device_code);
-        tvDeviceSerial = findViewById(R.id.tv_device_serial);
-        rowServiceHistory = findViewById(R.id.row_service_history);
         feedback = findViewById(R.id.layout_device_info_feedback);
         progress = findViewById(R.id.progress_device_info);
         retry = findViewById(R.id.btn_retry_device_info);
         tvFeedback = findViewById(R.id.tv_device_info_feedback);
-        tvDeviceSerial.setText(R.string.device_info_unknown);
     }
 
     private void render(DeviceInfoUiState state) {
@@ -105,9 +100,5 @@ public class DeviceInfoActivity extends AppCompatActivity {
     private void setupActions() {
         btnBack.setOnClickListener(v -> finish());
         retry.setOnClickListener(v -> viewModel.loadRobot());
-
-        rowServiceHistory.setOnClickListener(v ->
-                Toast.makeText(this, getString(R.string.device_info_history_service), Toast.LENGTH_SHORT).show()
-        );
     }
 }

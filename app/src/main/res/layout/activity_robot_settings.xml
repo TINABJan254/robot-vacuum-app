@@ -64,7 +64,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_card_settings_group"
-                android:elevation="1dp"
+                android:clipToOutline="true"
+                android:elevation="0dp"
                 android:orientation="vertical">
 
                 <!-- Row 1: Robot Name -->
@@ -142,62 +143,6 @@
                 <LinearLayout
                     android:id="@+id/row_schedule"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="64dp"
-                    android:background="?attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="16dp"
-                    android:paddingVertical="10dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/setting_schedule"
-                            android:textColor="@color/text_title"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tv_schedule_subtitle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="@string/setting_schedule_subtitle"
-                            android:textColor="@color/text_hint"
-                            android:textSize="13sp" />
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_chevron_right" />
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- Card Group 2: Cài Đặt Khác, Thông tin thiết bị -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_card_settings_group"
-                android:elevation="1dp"
-                android:orientation="vertical">
-
-                <!-- Row 1: Cài Đặt Khác -->
-                <LinearLayout
-                    android:id="@+id/row_other_settings"
-                    android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:background="?attr/selectableItemBackground"
                     android:clickable="true"
@@ -210,7 +155,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/setting_other"
+                        android:text="@string/setting_schedule"
                         android:textColor="@color/text_title"
                         android:textSize="15sp"
                         android:textStyle="bold" />
@@ -222,13 +167,19 @@
                         android:src="@drawable/ic_chevron_right" />
                 </LinearLayout>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginHorizontal="16dp"
-                    android:background="@color/divider_line" />
+            </LinearLayout>
 
-                <!-- Row 2: Thông tin thiết bị -->
+            <!-- Card Group 2: Thông tin thiết bị -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_card_settings_group"
+                android:clipToOutline="true"
+                android:elevation="0dp"
+                android:orientation="vertical">
+
+                <!-- Thông tin thiết bị -->
                 <LinearLayout
                     android:id="@+id/row_device_info"
                     android:layout_width="match_parent"

@@ -276,34 +276,7 @@
                 android:textSize="11sp" />
         </LinearLayout>
 
-        <!-- Tab 2: Middle Cube Button (Bản đồ / Không gian) -->
-        <FrameLayout
-            android:id="@+id/tab_space"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true">
-
-            <FrameLayout
-                android:id="@+id/container_tab_space"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center"
-                android:background="@drawable/bg_nav_center_cube_active">
-
-                <ImageView
-                    android:id="@+id/img_tab_space"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_nav_cube" />
-            </FrameLayout>
-        </FrameLayout>
-
-        <!-- Tab 3: Tài khoản -->
+        <!-- Tab 2: Tài khoản -->
         <LinearLayout
             android:id="@+id/tab_mine"
             android:layout_width="0dp"

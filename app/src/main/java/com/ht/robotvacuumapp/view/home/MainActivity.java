@@ -36,8 +36,8 @@ import com.ht.robotvacuumapp.viewmodel.home.MainViewModel;
 public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRobotClickListener {
     private MainViewModel viewModel;
     private RobotAdapter adapter;
-    private View emptyState, devicesState, loadState, loadProgress, retryRobots, containerTabSpace;
-    private ImageView imgTabRobot, imgTabSpace, imgTabMine;
+    private View emptyState, devicesState, loadState, loadProgress, retryRobots;
+    private ImageView imgTabRobot, imgTabMine;
     private TextView tvTabRobot, tvTabMine, tvDevicesHeader, tvRefresh, tvListError, tvLoadMessage;
     private AlertDialog addRobotDialog;
     private EditText edtRobotId, edtRobotCode;
@@ -85,9 +85,7 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
         tvListError = findViewById(R.id.tv_list_error);
         tvRefresh = findViewById(R.id.tv_sort);
         tvDevicesHeader = findViewById(R.id.tv_devices_header);
-        containerTabSpace = findViewById(R.id.container_tab_space);
         imgTabRobot = findViewById(R.id.img_tab_robot);
-        imgTabSpace = findViewById(R.id.img_tab_space);
         imgTabMine = findViewById(R.id.img_tab_mine);
         tvTabRobot = findViewById(R.id.tv_tab_robot);
         tvTabMine = findViewById(R.id.tv_tab_mine);
@@ -102,9 +100,8 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
         tvRefresh.setOnClickListener(v -> viewModel.loadRobots());
         retryRobots.setOnClickListener(v -> viewModel.loadRobots());
         findViewById(R.id.tab_robot).setOnClickListener(v -> viewModel.selectTab(0));
-        findViewById(R.id.tab_space).setOnClickListener(v -> viewModel.selectTab(1));
         findViewById(R.id.tab_mine).setOnClickListener(v -> {
-            viewModel.selectTab(2);
+            viewModel.selectTab(1);
             showAccount();
         });
         viewModel.getUiState().observe(this, this::render);
@@ -152,11 +149,8 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
         int inactive = ContextCompat.getColor(this, R.color.text_secondary);
         imgTabRobot.setColorFilter(selected == 0 ? active : inactive);
         tvTabRobot.setTextColor(selected == 0 ? active : inactive);
-        imgTabSpace.setColorFilter(selected == 1 ? active : inactive);
-        containerTabSpace.setBackgroundResource(selected == 1
-                ? R.drawable.bg_nav_center_cube_active : R.drawable.bg_nav_center_cube_inactive);
-        imgTabMine.setColorFilter(selected == 2 ? active : inactive);
-        tvTabMine.setTextColor(selected == 2 ? active : inactive);
+        imgTabMine.setColorFilter(selected == 1 ? active : inactive);
+        tvTabMine.setTextColor(selected == 1 ? active : inactive);
     }
 
     private void showAccount() {

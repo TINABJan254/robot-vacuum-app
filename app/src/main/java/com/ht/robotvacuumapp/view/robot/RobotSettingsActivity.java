@@ -39,7 +39,6 @@ public class RobotSettingsActivity extends AppCompatActivity {
     private TextView tvRobotName;
     private View rowHistory;
     private View rowSchedule;
-    private View rowOtherSettings;
     private View rowDeviceInfo;
     private View btnUnpairDevice;
 
@@ -82,7 +81,6 @@ public class RobotSettingsActivity extends AppCompatActivity {
         tvRobotName = findViewById(R.id.tv_robot_name);
         rowHistory = findViewById(R.id.row_history);
         rowSchedule = findViewById(R.id.row_schedule);
-        rowOtherSettings = findViewById(R.id.row_other_settings);
         rowDeviceInfo = findViewById(R.id.row_device_info);
         btnUnpairDevice = findViewById(R.id.btn_delete_device);
 
@@ -108,10 +106,6 @@ public class RobotSettingsActivity extends AppCompatActivity {
             intent.putExtra(RobotScheduleActivity.EXTRA_ROBOT_ID, viewModel.getUiState().getValue().robotId);
             startActivity(intent);
         });
-
-        rowOtherSettings.setOnClickListener(v ->
-                Toast.makeText(this, "Cài đặt khác", Toast.LENGTH_SHORT).show()
-        );
 
         rowDeviceInfo.setOnClickListener(v -> {
             Intent intent = new Intent(this, DeviceInfoActivity.class);
@@ -167,7 +161,7 @@ public class RobotSettingsActivity extends AppCompatActivity {
         tvRobotName.setText(state.robotName);
         rowRobotName.setEnabled(!busy && !state.unpairDialogOpen && viewModel.hasValidRobotId());
         btnUnpairDevice.setEnabled(!busy && !state.dialogOpen && viewModel.hasValidRobotId());
-        for (View action : new View[]{btnBack, rowHistory, rowSchedule, rowOtherSettings, rowDeviceInfo}) {
+        for (View action : new View[]{btnBack, rowHistory, rowSchedule, rowDeviceInfo}) {
             action.setEnabled(!busy);
         }
         if (state.updatedRobot != null) {
