@@ -17,6 +17,7 @@ import retrofit2.Response;
 
 /** One instance per ViewModel; owns only that screen's requests. */
 public class AuthRepository {
+    private static final String SESSION_EXPIRED = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
     private final Context context;
     private final TokenManager tokens;
     private final LoginPreferences preferences;
@@ -25,7 +26,7 @@ public class AuthRepository {
 
     public interface AuthCallback<T> {
         void onSuccess(T data);
-        void onError(String message);
+        void onError(int status, String message);
     }
 
     public AuthRepository(Context context) {
@@ -39,39 +40,69 @@ public class AuthRepository {
     }
 
     public void login(String username, String password, AuthCallback<LoginResponse> callback) {
-        enqueue(service().login(new LoginRequest(username, password)), new AuthCallback<LoginResponse>() {
+        enqueue(service().login(new LoginRequest(username, password)), true, new AuthCallback<LoginResponse>() {
             @Override public void onSuccess(LoginResponse data) {
                 tokens.saveSession(data);
                 callback.onSuccess(data);
             }
-            @Override public void onError(String message) { callback.onError(message); }
+            @Override public void onError(int status, String message) {
+                callback.onError(status, status == 401 ? "Tên đăng nhập hoặc mật khẩu không chính xác." : message);
+            }
         });
     }
 
     public void register(String name, String username, String password, AuthCallback<RegisterResponse> callback) {
-        enqueue(service().register(new RegisterRequest(name, username, password)), callback);
+        enqueue(service().register(new RegisterRequest(name, username, password)), true, callback);
     }
 
-    private <T> void enqueue(Call<T> request, AuthCallback<T> callback) {
+    public void getAccount(AuthCallback<UserDto> callback) {
+        String header = tokens.getAuthHeader();
+        if (blank(header)) {
+            callback.onError(401, SESSION_EXPIRED);
+            return;
+        }
+        enqueue(service().getAccount(header), true, callback);
+    }
+
+    public void logoutAccount(AuthCallback<Void> callback) {
+        String header = tokens.getAuthHeader();
+        if (blank(header)) {
+            callback.onError(401, SESSION_EXPIRED);
+            return;
+        }
+        enqueue(service().logout(header), false, callback);
+    }
+
+    private boolean blank(String value) { return value == null || value.trim().isEmpty(); }
+
+    private <T> void enqueue(Call<T> request, boolean requireBody, AuthCallback<T> callback) {
         requests.add(request);
         request.enqueue(new Callback<T>() {
             @Override public void onResponse(Call<T> call, Response<T> response) {
                 requests.remove(call);
-                if (call.isCanceled()) return;
-                if (response.isSuccessful() && response.body() != null) callback.onSuccess(response.body());
-                else callback.onError(parseError(response.code(), response.errorBody()));
+                if (call.isCanceled()) {
+                    if (response.errorBody() != null) response.errorBody().close();
+                    return;
+                }
+                if (!response.isSuccessful()) {
+                    callback.onError(response.code(), parseError(response.code(), response.errorBody()));
+                } else if (requireBody && response.body() == null) {
+                    callback.onError(0, "Máy chủ trả về dữ liệu trống. Vui lòng thử lại.");
+                } else {
+                    callback.onSuccess(response.body());
+                }
             }
             @Override public void onFailure(Call<T> call, Throwable error) {
                 requests.remove(call);
-                if (!call.isCanceled()) callback.onError("Không thể kết nối đến máy chủ LAN ("
-                        + getBaseUrl() + "). Vui lòng kiểm tra cùng mạng Wi-Fi và backend đang chạy.");
+                if (!call.isCanceled()) callback.onError(0, "Không thể kết nối đến máy chủ ("
+                        + getBaseUrl() + "). Vui lòng kiểm tra kết nối và thử lại.");
             }
         });
     }
 
     private String parseError(int status, ResponseBody body) {
         try (ResponseBody errorBody = body) {
-            if (status == 401) return "Tên đăng nhập hoặc mật khẩu không chính xác.";
+            if (status == 401) return SESSION_EXPIRED;
             if (status == 409) return "Tên đăng nhập đã tồn tại, vui lòng chọn tên khác.";
             if (errorBody != null) {
                 ErrorResponse error = gson.fromJson(errorBody.string(), ErrorResponse.class);

@@ -36,7 +36,7 @@ public class LoginViewModel extends ViewModel {
                         ? data.getUser().getName() : username;
                 state.setValue(new LoginUiState(false, null, null, null, true, name));
             }
-            @Override public void onError(String message) {
+            @Override public void onError(int status, String message) {
                 if (!cleared) state.setValue(new LoginUiState(false, null, null, message, false, null));
             }
         });

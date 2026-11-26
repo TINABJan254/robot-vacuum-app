@@ -31,6 +31,9 @@
             android:name=".view.auth.RegisterActivity"
             android:exported="false" />
         <activity
+            android:name=".view.profile.ProfileActivity"
+            android:exported="false" />
+        <activity
             android:name=".view.robot.RobotControlActivity"
             android:exported="false" />
         <activity
