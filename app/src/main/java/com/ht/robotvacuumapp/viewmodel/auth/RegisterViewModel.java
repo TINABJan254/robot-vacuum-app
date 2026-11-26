@@ -50,7 +50,7 @@ public class RegisterViewModel extends ViewModel {
             @Override public void onSuccess(RegisterResponse data) {
                 if (!cleared) publish(false, null, username);
             }
-            @Override public void onError(String message) {
+            @Override public void onError(int status, String message) {
                 if (!cleared) publish(false, message, null);
             }
         });

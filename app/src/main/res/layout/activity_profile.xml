@@ -6,9 +6,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/app_background"
+    tools:context=".view.profile.ProfileActivity"
     tools:theme="@style/Theme.RobotVacuumApp">
 
-    <!-- Layout preview only. User values will be supplied when the screen is connected. -->
     <LinearLayout
         android:id="@+id/profile_header"
         android:layout_width="0dp"
@@ -56,6 +56,41 @@
             android:orientation="vertical"
             android:paddingHorizontal="16dp"
             android:paddingBottom="24dp">
+
+            <LinearLayout
+                android:id="@+id/layout_profile_feedback"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <ProgressBar
+                    android:id="@+id/progress_profile"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/tv_profile_feedback"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:accessibilityLiveRegion="polite"
+                    android:gravity="center"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/btn_retry_profile"
+                    style="@style/Widget.Robot.ChipAction"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:minHeight="48dp"
+                    android:text="Thử lại" />
+            </LinearLayout>
 
             <!-- Profile summary -->
             <LinearLayout
@@ -257,7 +292,7 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Account is selected in this preview of the two-tab navigation. -->
+    <!-- Two-tab navigation with Account selected. -->
     <LinearLayout
         android:id="@+id/bottom_nav_bar"
         android:layout_width="0dp"

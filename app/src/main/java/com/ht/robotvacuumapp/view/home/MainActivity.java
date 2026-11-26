@@ -29,6 +29,7 @@ import com.ht.robotvacuumapp.model.entity.RobotDevice;
 import com.ht.robotvacuumapp.model.repository.AuthRepository;
 import com.ht.robotvacuumapp.model.repository.RobotRepository;
 import com.ht.robotvacuumapp.view.auth.LoginActivity;
+import com.ht.robotvacuumapp.view.profile.ProfileActivity;
 import com.ht.robotvacuumapp.view.robot.RobotControlActivity;
 import com.ht.robotvacuumapp.viewmodel.home.MainUiState;
 import com.ht.robotvacuumapp.viewmodel.home.MainViewModel;
@@ -100,10 +101,8 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
         tvRefresh.setOnClickListener(v -> viewModel.loadRobots());
         retryRobots.setOnClickListener(v -> viewModel.loadRobots());
         findViewById(R.id.tab_robot).setOnClickListener(v -> viewModel.selectTab(0));
-        findViewById(R.id.tab_mine).setOnClickListener(v -> {
-            viewModel.selectTab(1);
-            showAccount();
-        });
+        findViewById(R.id.tab_mine).setOnClickListener(v ->
+                startActivity(new Intent(this, ProfileActivity.class)));
         viewModel.getUiState().observe(this, this::render);
     }
 
@@ -151,16 +150,6 @@ public class MainActivity extends AppCompatActivity implements RobotAdapter.OnRo
         tvTabRobot.setTextColor(selected == 0 ? active : inactive);
         imgTabMine.setColorFilter(selected == 1 ? active : inactive);
         tvTabMine.setTextColor(selected == 1 ? active : inactive);
-    }
-
-    private void showAccount() {
-        String name = viewModel.getUserName();
-        new AlertDialog.Builder(this)
-                .setTitle("Tài khoản người dùng")
-                .setMessage("Họ tên: " + (name != null && !name.isEmpty() ? name : "Người dùng")
-                        + "\nTên đăng nhập: " + viewModel.getUsername() + "\nVai trò: " + viewModel.getUserRole())
-                .setPositiveButton("Đăng xuất", (dialog, which) -> viewModel.logout())
-                .setNegativeButton("Đóng", null).show();
     }
 
     private void renderPairDialog(MainUiState state) {
